@@ -25,8 +25,15 @@ async function bootstrap() {
         res.status(200).json({ status: 'ok' });
     });
     app.useStaticAssets((0, node_path_1.join)(process.cwd(), 'frontend'), { prefix: '/app' });
+    app.useStaticAssets((0, node_path_1.join)(process.cwd(), 'admin'), { prefix: '/admin' });
+    httpAdapter.get('/', (_req, res) => {
+        res.redirect('/app/');
+    });
     httpAdapter.get('/app', (_req, res) => {
         res.redirect('/app/');
+    });
+    httpAdapter.get('/admin', (_req, res) => {
+        res.redirect('/admin/');
     });
     app.useGlobalPipes(new common_1.ValidationPipe({
         whitelist: true,
@@ -43,6 +50,7 @@ async function bootstrap() {
         .addTag('Auth', 'Registration, login, token refresh, and OAuth flows')
         .addTag('Ideas', 'CRUD, scoring, and ranking overrides for the idea backlog')
         .addTag('CV Profile', 'Professional summary and skill calibration data used for fit scoring')
+        .addTag('Admin', 'Platform administration endpoints (admin-only)')
         .build();
     const document = swagger_1.SwaggerModule.createDocument(app, config);
     swagger_1.SwaggerModule.setup('api/docs', app, document, {

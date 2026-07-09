@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Idea Dump — A personal command center for capturing, scoring, and ranking your project ideas." />
+  <title>Idea Dump</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/app/style.css" />
+</head>
+<body>
+
+  <!-- ── Nav ── -->
+  <nav class="landing-nav container">
+    <div class="brand">
+      <img class="logo-mark" src="/app/logo.png" alt="Idea Dump" />
+      <span>Idea Dump</span>
+    </div>
+    <div class="nav-links">
+      <a href="#about">About</a>
+      <a href="#how-it-works">How it works</a>
+      <a href="#use-cases">Use cases</a>
+      <a href="#scoring">Scoring</a>
+      <a href="/app/" class="btn btn-primary btn-sm">Launch App</a>
+    </div>
+  </nav>
+
+  <!-- ── Hero ── -->
+  <section class="hero container">
+    <div class="eyebrow">
+      <span>v1.0 &middot; Open source &middot; Rule-based scoring</span>
+    </div>
+    <h1>
+      Turn your idea backlog<br />
+      into a <span class="text-gradient">prioritised build plan</span>
+    </h1>
+    <p class="lead">
+      Idea Dump is a personal command centre for developers who have more project ideas than time.
+      Capture ideas, score them against your actual skills and experience, and let the engine surface what you should build next.
+    </p>
+    <div class="cta-row">
+      <a href="/app/" class="btn btn-primary">
+        <i data-lucide="rocket"></i> Get Started — It's Free
+      </a>
+      <a href="#about" class="btn btn-secondary">
+        <i data-lucide="info"></i> Learn More
+      </a>
+    </div>
+  </section>
+
+  <!-- ── About / What Is This ── -->
+  <section id="about" class="section container">
+    <div class="section-head">
+      <h2>What is Idea Dump?</h2>
+      <p>
+        A full-stack web application that helps software engineers and indie builders decide which project idea to work on next.
+      </p>
+    </div>
+    <div class="grid-2">
+      <div class="feature-card glass">
+        <h3>The Problem</h3>
+        <p>
+          You have dozens of project ideas — a real-time editor, an AI code review bot, a self-hosted analytics pipeline.
+          But which one aligns best with your current skills? Which is worth the effort? Without data, you pick
+          arbitrarily or get stuck in analysis paralysis.
+        </p>
+      </div>
+      <div class="feature-card glass">
+        <h3>The Solution</h3>
+        <p>
+          Idea Dump lets you dump every idea freely, then automatically scores each one against your
+          <strong>CV profile</strong> — your skills, categories, and proficiency weights. The result is a ranked
+          backlog ordered by CV-fit, estimated effort, and novelty. No spreadsheets, no gut-feel.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── How It Works ── -->
+  <section id="how-it-works" class="section container">
+    <div class="section-head">
+      <h2>How it works</h2>
+      <p>From idea dump to prioritised backlog in three steps.</p>
+    </div>
+    <div class="steps">
+      <div class="step glass">
+        <div class="num">01</div>
+        <h3>Build your CV profile</h3>
+        <p>
+          Add a professional summary and your core skills (languages, frameworks, tools, domain expertise)
+          with proficiency weights (1–5). This calibrates the scoring engine to <em>your</em> unique stack.
+        </p>
+      </div>
+      <div class="step glass">
+        <div class="num">02</div>
+        <h3>Dump your ideas</h3>
+        <p>
+          Submit project ideas with title, description, key features, and target use case.
+          Each idea is automatically scored the moment you submit it — no manual review needed.
+        </p>
+      </div>
+      <div class="step glass">
+        <div class="num">03</div>
+        <h3>Review your ranked backlog</h3>
+        <p>
+          Your backlog is sorted by computed priority. Pin a favourite, assign a manual rank to override the
+          algorithm, or rescore anytime after updating your CV profile. You stay in control.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Use Cases ── -->
+  <section id="use-cases" class="section container">
+    <div class="section-head">
+      <h2>Who is this for?</h2>
+      <p>Real scenarios where Idea Dump changes how you decide.</p>
+    </div>
+    <div class="grid-3">
+      <div class="feature-card glass">
+        <div class="ico"><i data-lucide="user"></i></div>
+        <h3>Portfolio builders</h3>
+        <p>
+          You're building projects to showcase for job applications. Score each idea against your current
+          skill stack and pick the one that maximises learning impact while staying feasible.
+        </p>
+      </div>
+      <div class="feature-card glass">
+        <div class="ico"><i data-lucide="users"></i></div>
+        <h3>Indie makers</h3>
+        <p>
+          You have a backlog of SaaS ideas but limited time. Let the engine surface the idea with the best
+          skill-fit so you ship faster instead of second-guessing.
+        </p>
+      </div>
+      <div class="feature-card glass">
+        <div class="ico"><i data-lucide="graduation-cap"></i></div>
+        <h3>Career switchers</h3>
+        <p>
+          You're moving into a new tech stack and want to build projects that reinforce your new skills.
+          Update your CV profile and the scoring automatically adapts.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Scoring Engine ── -->
+  <section id="scoring" class="section container">
+    <div class="section-head">
+      <h2>How scoring works</h2>
+      <p>Transparent, deterministic, and explainable — no black box.</p>
+    </div>
+    <div class="grid-3">
+      <div class="feature-card glass">
+        <h3>Fit score (50%)</h3>
+        <p>
+          Tokenizes the idea's title, description, features, and use case, then matches them against your
+          <strong>CvSkill.name</strong> entries weighted by proficiency. Higher overlap = higher fit.
+        </p>
+      </div>
+      <div class="feature-card glass">
+        <h3>Effort score (30%)</h3>
+        <p>
+          Derived from feature count and description length as a proxy for scope. Lower effort is rewarded
+          (inverted in the final aggregation) so achievable ideas rise to the top.
+        </p>
+      </div>
+      <div class="feature-card glass">
+        <h3>Novelty score (20%)</h3>
+        <p>
+          Measures how different an idea is from your existing idea set using text similarity.
+          Diverse ideas score higher, preventing a backlog full of variations on the same theme.
+        </p>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:1.5rem">
+      <p style="color:var(--text-secondary);font-size:0.9rem">
+        Final score = 0.5 &times; fit + 0.3 &times; (100 &minus; effort) + 0.2 &times; novelty
+        &nbsp;&middot;&nbsp; Weights are configurable via environment variables.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── Tech Stack ── -->
+  <section id="tech" class="section container">
+    <div class="section-head">
+      <h2>Built with production-grade tooling</h2>
+      <p>The same stack used in real-world backends, deployed to production.</p>
+    </div>
+    <div class="grid-3">
+      <div class="feature-card glass">
+        <h3>Backend</h3>
+        <p>TypeScript, NestJS, MikroORM, PostgreSQL, Redis, Passport.js (JWT RS256 + OAuth2)</p>
+      </div>
+      <div class="feature-card glass">
+        <h3>Frontend</h3>
+        <p>Vanilla JS SPA with responsive CSS grid, glassmorphism design system, Lucide icons</p>
+      </div>
+      <div class="feature-card glass">
+        <h3>Infrastructure</h3>
+        <p>Docker multi-stage build, GitHub Container Registry, Traefik reverse proxy, Infisical secrets, Cloudflare DNS + TLS</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CTA ── -->
+  <section class="section container">
+    <div class="cta-band glass">
+      <h2>Stop guessing. Start building.</h2>
+      <p>Register in seconds, build your CV profile, and let the engine rank your ideas.</p>
+      <div class="cta-row">
+        <a href="/app/" class="btn btn-primary">
+          <i data-lucide="rocket"></i> Launch the App
+        </a>
+        <a href="https://github.com/gopal-chhetri/idea-dump" class="btn btn-secondary" target="_blank">
+          <i data-lucide="github"></i> View on GitHub
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Footer ── -->
+  <footer class="site-footer container">
+    <p>Idea Dump &middot; MIT License &middot; Built with NestJS &middot; Part of the portfolio project sequence</p>
+  </footer>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="landing.js"></script>
+</body>
+</html>

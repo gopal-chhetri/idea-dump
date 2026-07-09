@@ -48,6 +48,7 @@ const auth_module_1 = require("./auth/auth.module");
 const users_module_1 = require("./users/users.module");
 const cv_profile_module_1 = require("./cv-profile/cv-profile.module");
 const ideas_module_1 = require("./ideas/ideas.module");
+const admin_module_1 = require("./admin/admin.module");
 const rate_limit_module_1 = require("./rate-limit/rate-limit.module");
 const entities = __importStar(require("./entities"));
 let AppModule = class AppModule {
@@ -71,6 +72,7 @@ exports.AppModule = AppModule = __decorate([
                     pathTs: './src/migrations',
                 },
             }),
+            admin_module_1.AdminModule,
             rate_limit_module_1.RateLimitModule,
             auth_module_1.AuthModule,
             users_module_1.UsersModule,

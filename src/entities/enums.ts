@@ -3,6 +3,11 @@ export enum OAuthProvider {
   GITHUB = 'github',
 }
 
+export enum UserRole {
+  USER = 'user',
+  ADMIN = 'admin',
+}
+
 export enum SkillCategory {
   LANGUAGE = 'language',
   FRAMEWORK = 'framework',

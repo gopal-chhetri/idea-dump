@@ -5,10 +5,12 @@ import { UsersService } from '../users/users.service';
 import { CvProfileService } from '../cv-profile/cv-profile.service';
 import { IdeasService } from '../ideas/ideas.service';
 import { ScoringService } from '../scoring/scoring.service';
-import { SkillCategory } from '../entities/enums';
+import { SkillCategory, UserRole } from '../entities/enums';
 
 const DEMO_EMAIL = 'user@gmail.com';
 const DEMO_PASSWORD = 'password123';
+const ADMIN_EMAIL = 'admin@gmail.com';
+const ADMIN_PASSWORD = 'password123';
 const SALT_ROUNDS = 12;
 
 const DEMO_SKILLS: { name: string; category: SkillCategory; weight: number }[] =
@@ -76,44 +78,62 @@ async function bootstrap() {
   const scoringService = app.get(ScoringService);
 
   try {
-    const existing = await usersService.findByEmail(DEMO_EMAIL);
-    if (existing) {
-      console.log(`Demo user already exists (${DEMO_EMAIL}). Skipping seed.`);
-      return;
-    }
+    const seedUser = async (
+      email: string,
+      password: string,
+      role: UserRole,
+    ) => {
+      const existing = await usersService.findByEmail(email);
+      if (existing) {
+        console.log(`${role} already exists (${email}). Skipping.`);
+        return existing;
+      }
 
-    const passwordHash = await bcrypt.hash(DEMO_PASSWORD, SALT_ROUNDS);
-    const user = await usersService.create({ email: DEMO_EMAIL, passwordHash });
-    console.log(`Created demo user ${user.email} (${user.id})`);
+      const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+      const user = await usersService.create({ email, passwordHash, role });
+      console.log(`Created ${role} ${user.email} (${user.id})`);
+      return user;
+    };
 
-    const profile = await cvProfileService.upsertProfile(
-      user.id,
-      'Full-stack engineer with strong experience in TypeScript, NestJS, and PostgreSQL. ' +
-        'Comfortable designing distributed systems, containerizing workloads with Docker, and owning features end to end.',
-    );
-    console.log(`Created CV profile ${profile.id}`);
+    const demo = await seedUser(DEMO_EMAIL, DEMO_PASSWORD, UserRole.USER);
+    await seedUser(ADMIN_EMAIL, ADMIN_PASSWORD, UserRole.ADMIN);
 
-    for (const skill of DEMO_SKILLS) {
-      const created = await cvProfileService.addSkill(
-        user.id,
-        skill.name,
-        skill.category,
-        skill.weight,
+    // Only seed CV + ideas for demo user (admin has no profile/ideas)
+    const existingProfile = await cvProfileService.getProfile(demo.id);
+    if (!existingProfile) {
+      const profile = await cvProfileService.upsertProfile(
+        demo.id,
+        'Full-stack engineer with strong experience in TypeScript, NestJS, and PostgreSQL. ' +
+          'Comfortable designing distributed systems, containerizing workloads with Docker, and owning features end to end.',
       );
-      console.log(
-        `  + skill: ${created.name} (${created.category}, w=${created.weight})`,
-      );
-    }
+      console.log(`Created CV profile ${profile.id}`);
 
-    for (const idea of DEMO_IDEAS) {
-      const created = await ideasService.create(user.id, idea);
-      await scoringService.scoreIdea(created.id, user.id);
-      console.log(`Created + scored idea: ${created.title} (${created.id})`);
+      for (const skill of DEMO_SKILLS) {
+        const created = await cvProfileService.addSkill(
+          demo.id,
+          skill.name,
+          skill.category,
+          skill.weight,
+        );
+        console.log(
+          `  + skill: ${created.name} (${created.category}, w=${created.weight})`,
+        );
+      }
+
+      for (const idea of DEMO_IDEAS) {
+        const created = await ideasService.create(demo.id, idea);
+        await scoringService.scoreIdea(created.id, demo.id);
+        console.log(`Created + scored idea: ${created.title} (${created.id})`);
+      }
+    } else {
+      console.log('Demo user CV profile already exists. Skipping CV + ideas.');
     }
 
     console.log('\nSeeding complete.');
-    console.log(`  email:    ${DEMO_EMAIL}`);
-    console.log(`  password: ${DEMO_PASSWORD}`);
+    console.log(`  user:  ${DEMO_EMAIL} / ${DEMO_PASSWORD} (${UserRole.USER})`);
+    console.log(
+      `  admin: ${ADMIN_EMAIL} / ${ADMIN_PASSWORD} (${UserRole.ADMIN})`,
+    );
   } finally {
     await app.close();
   }

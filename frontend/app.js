@@ -1,6 +1,7 @@
 /**
  * Idea Dump — Client Application
- * Dual-mode: live API sync when backend is reachable, localStorage mock when offline.
+ * Dual-mode: landing page when logged out, dashboard when authenticated.
+ * Admin users are redirected to /admin/.
  */
 
 // ── API Client ────────────────────────────────────────────────────────────────
@@ -44,7 +45,6 @@ class ApiClient {
 
     let response = await fetch(`${this.baseUrl}${path}`, { ...options, headers });
 
-    // Attempt token refresh on 401
     if (response.status === 401 && this.refreshToken) {
       const refreshed = await this._attemptRefresh();
       if (refreshed) {
@@ -75,6 +75,15 @@ class ApiClient {
     } catch { /* silent */ }
     this.clearTokens();
     return false;
+  }
+}
+
+// ── Decode JWT payload ──
+function decodeToken(token) {
+  try {
+    return JSON.parse(atob(token.split('.')[1]));
+  } catch {
+    return null;
   }
 }
 
@@ -146,7 +155,7 @@ class LocalScoringEngine {
   }
 }
 
-// ── Skeleton HTML helper ──────────────────────────────────────────────────────
+// ── Helpers ──────────────────────────────────────────────────────────────────
 function renderSkeletons(count = 3) {
   return Array.from({ length: count }, () => `
     <div class="skeleton-card">
@@ -164,6 +173,12 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const view = document.getElementById(name);
+  if (view) view.classList.add('active');
+}
+
 // ── Application ───────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   const api = new ApiClient();
@@ -178,6 +193,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // DOM refs
   const $ = id => document.getElementById(id);
+  const authCheck = $('auth-check');
+  const landingView = $('landing-view');
+  const dashboardView = $('dashboard-view');
   const connectionBadge = $('connection-badge');
   const authBtn = $('auth-btn');
   const authModal = $('auth-modal');
@@ -195,6 +213,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const rankForm = $('rank-form');
   const authForm = $('auth-form');
 
+  // ── View switching ──────────────────────────────────────────────────────
+  function showLanding() {
+    showView('landing-view');
+  }
+
+  function showDashboard() {
+    showView('dashboard-view');
+  }
+
   // ── OAuth token pickup from URL (redirect flow) ──────────────────────────
   (function consumeOAuthParams() {
     const params = new URLSearchParams(window.location.search);
@@ -202,10 +229,33 @@ document.addEventListener('DOMContentLoaded', () => {
     const rt = params.get('refreshToken');
     if (at && rt) {
       api.setTokens(at, rt);
-      // Clean URL so tokens don't persist in browser history
       window.history.replaceState({}, '', window.location.pathname);
     }
   })();
+
+  // ── Bootstrap: check token and role ──────────────────────────────────────
+  async function bootstrap() {
+    const token = api.token;
+    if (token) {
+      const payload = decodeToken(token);
+      if (payload) {
+        // Admin → redirect
+        if (payload.role === 'admin') {
+          window.location.href = '/admin/';
+          return;
+        }
+        // User → show dashboard
+        state.isAuthenticated = true;
+        authCheck.style.display = 'none';
+        showDashboard();
+        await syncApp();
+        return;
+      }
+    }
+    // No valid token → show landing
+    authCheck.style.display = 'none';
+    showLanding();
+  }
 
   // ── Sync pipeline ────────────────────────────────────────────────────────
   async function syncApp() {
@@ -394,7 +444,6 @@ document.addEventListener('DOMContentLoaded', () => {
       </article>`;
     }).join('');
 
-    // Hook action buttons
     ideasStack.querySelectorAll('.delete-idea-btn').forEach(btn =>
       btn.addEventListener('click', e => deleteIdea(e.currentTarget.dataset.id)));
     ideasStack.querySelectorAll('.rescore-idea-btn').forEach(btn =>
@@ -503,7 +552,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   rescoreAllBtn.addEventListener('click', async () => {
     if (!api.isOnline) {
-      // Re-score all locally
       state.ideas.forEach(idea => {
         idea.scores = [{ ...LocalScoringEngine.scoreIdea(idea, state.profile.skills, state.ideas), scoringMethod: 'rule_based' }];
       });
@@ -595,15 +643,23 @@ document.addEventListener('DOMContentLoaded', () => {
     authSubmitBtn.textContent = 'Register';
   });
 
-  authBtn.addEventListener('click', () => {
+  function handleAuthClick() {
     if (state.isAuthenticated) {
       api.clearTokens();
+      state.isAuthenticated = false;
       showToast('Signed out', 'success');
-      syncApp();
+      showLanding();
     } else {
       openModal(authModal);
     }
-  });
+  }
+
+  // Wire landing page auth buttons
+  $('landing-auth-btn').addEventListener('click', () => openModal(authModal));
+  $('landing-cta-btn').addEventListener('click', () => openModal(authModal));
+  $('landing-footer-cta').addEventListener('click', () => openModal(authModal));
+
+  authBtn.addEventListener('click', handleAuthClick);
 
   authForm.addEventListener('submit', async e => {
     e.preventDefault();
@@ -616,9 +672,19 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify({ email, password }),
       });
       api.setTokens(data.accessToken, data.refreshToken);
+
+      // Check role
+      const payload = decodeToken(data.accessToken);
+      if (payload?.role === 'admin') {
+        window.location.href = '/admin/';
+        return;
+      }
+
       closeModals();
       authBtn.innerHTML = '<i data-lucide="log-out"></i> Log Out';
       showToast('Authenticated successfully', 'success');
+      state.isAuthenticated = true;
+      showDashboard();
       await syncApp();
     } catch (err) {
       showToast(err.message, 'error');
@@ -655,7 +721,6 @@ document.addEventListener('DOMContentLoaded', () => {
     openModal(rankModal);
   }
 
-  // Weight slider dynamic bubble
   const weightSlider = $('skill-weight');
   const weightBubble = $('skill-weight-bubble');
   weightSlider.addEventListener('input', e => { weightBubble.textContent = e.target.value; });
@@ -679,6 +744,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 3500);
   }
 
-  // Initial load
-  syncApp();
+  // ── Start ──
+  bootstrap();
 });

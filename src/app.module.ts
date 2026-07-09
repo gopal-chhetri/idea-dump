@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { CvProfileModule } from './cv-profile/cv-profile.module';
 import { IdeasModule } from './ideas/ideas.module';
+import { AdminModule } from './admin/admin.module';
 import { RateLimitModule } from './rate-limit/rate-limit.module';
 import * as entities from './entities';
 
@@ -26,6 +27,7 @@ import * as entities from './entities';
         pathTs: './src/migrations',
       },
     }),
+    AdminModule,
     RateLimitModule,
     AuthModule,
     UsersModule,

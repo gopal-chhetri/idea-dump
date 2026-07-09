@@ -31,10 +31,17 @@ async function bootstrap() {
     res.status(200).json({ status: 'ok' });
   });
 
-  // Serve the static SPA at /app (zero extra deps — raw Express static)
+  // Serve static assets
   app.useStaticAssets(join(process.cwd(), 'frontend'), { prefix: '/app' });
+  app.useStaticAssets(join(process.cwd(), 'admin'), { prefix: '/admin' });
+  httpAdapter.get('/', (_req: Request, res: Response) => {
+    res.redirect('/app/');
+  });
   httpAdapter.get('/app', (_req: Request, res: Response) => {
     res.redirect('/app/');
+  });
+  httpAdapter.get('/admin', (_req: Request, res: Response) => {
+    res.redirect('/admin/');
   });
 
   app.useGlobalPipes(
@@ -46,7 +53,10 @@ async function bootstrap() {
   );
 
   app.useGlobalFilters(new HttpExceptionFilter());
-  app.useGlobalInterceptors(new LoggingInterceptor(), new ResponseInterceptor());
+  app.useGlobalInterceptors(
+    new LoggingInterceptor(),
+    new ResponseInterceptor(),
+  );
 
   const config = new DocumentBuilder()
     .setTitle('Idea Dump API')
@@ -64,6 +74,7 @@ async function bootstrap() {
       'CV Profile',
       'Professional summary and skill calibration data used for fit scoring',
     )
+    .addTag('Admin', 'Platform administration endpoints (admin-only)')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document, {

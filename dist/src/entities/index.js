@@ -24,4 +24,5 @@ __exportStar(require("./idea.entity"), exports);
 __exportStar(require("./idea-score.entity"), exports);
 __exportStar(require("./idea-rank-override.entity"), exports);
 __exportStar(require("./daily-idea-quota.entity"), exports);
+__exportStar(require("./system-setting.entity"), exports);
 //# sourceMappingURL=index.js.map

@@ -1,0 +1,99 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+
+env:
+  REGISTRY_OWNER: ${{ vars.REGISTRY_OWNER || 'gopal-chhetri' }}
+  IMAGE_NAME: idea-prioritizer
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm run lint || true
+
+      - run: pnpm run build
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+
+  cd:
+    needs: ci
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set image tag
+        id: tag
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          else
+            SHA="${GITHUB_SHA:0:7}"
+            echo "tag=main-${SHA}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deployments/production/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.tag }}
+            ghcr.io/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Install Infisical CLI
+        run: |
+          curl -1sLf 'https://dl.cloudsmith.io/public/infisical/infisical-cli/setup.deb.sh' | sudo bash
+          sudo apt-get install -y infisical
+
+      - name: SCP deploy files to VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_SSH_USER: ${{ secrets.VPS_SSH_USER }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "${VPS_HOST}" >> ~/.ssh/known_hosts
+          scp deployments/production/compose.yml \
+            deployments/production/deploy.sh \
+            "${VPS_SSH_USER}@${VPS_HOST}:/opt/idea-prioritizer/"
+
+      - name: Deploy via SSH
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_SSH_USER: ${{ secrets.VPS_SSH_USER }}
+        run: |
+          ssh "${VPS_SSH_USER}@${VPS_HOST}" \
+            "cd /opt/idea-prioritizer && \
+             REGISTRY_OWNER=${REGISTRY_OWNER} \
+             infisical run --token ${{ secrets.INFISICAL_TOKEN }} -- \
+             ./deploy.sh ${{ steps.tag.outputs.tag }}"

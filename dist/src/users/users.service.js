@@ -13,6 +13,7 @@ exports.UsersService = void 0;
 const common_1 = require("@nestjs/common");
 const postgresql_1 = require("@mikro-orm/postgresql");
 const user_entity_1 = require("../entities/user.entity");
+const enums_1 = require("../entities/enums");
 let UsersService = class UsersService {
     em;
     constructor(em) {
@@ -24,11 +25,21 @@ let UsersService = class UsersService {
     async findByEmail(email) {
         return this.em.findOne(user_entity_1.User, { email });
     }
+    async findAll() {
+        return this.em.find(user_entity_1.User, {}, { orderBy: { createdAt: 'DESC' } });
+    }
     async create(data) {
         const user = this.em.create(user_entity_1.User, {
             email: data.email,
             passwordHash: data.passwordHash,
+            role: data.role ?? enums_1.UserRole.USER,
         });
+        await this.em.flush();
+        return user;
+    }
+    async updateRole(userId, role) {
+        const user = await this.em.findOneOrFail(user_entity_1.User, { id: userId });
+        user.role = role;
         await this.em.flush();
         return user;
     }

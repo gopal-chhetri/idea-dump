@@ -43,6 +43,8 @@ const scoring_service_1 = require("../scoring/scoring.service");
 const enums_1 = require("../entities/enums");
 const DEMO_EMAIL = 'user@gmail.com';
 const DEMO_PASSWORD = 'password123';
+const ADMIN_EMAIL = 'admin@gmail.com';
+const ADMIN_PASSWORD = 'password123';
 const SALT_ROUNDS = 12;
 const DEMO_SKILLS = [
     { name: 'TypeScript', category: enums_1.SkillCategory.LANGUAGE, weight: 5 },
@@ -93,29 +95,40 @@ async function bootstrap() {
     const ideasService = app.get(ideas_service_1.IdeasService);
     const scoringService = app.get(scoring_service_1.ScoringService);
     try {
-        const existing = await usersService.findByEmail(DEMO_EMAIL);
-        if (existing) {
-            console.log(`Demo user already exists (${DEMO_EMAIL}). Skipping seed.`);
-            return;
+        const seedUser = async (email, password, role) => {
+            const existing = await usersService.findByEmail(email);
+            if (existing) {
+                console.log(`${role} already exists (${email}). Skipping.`);
+                return existing;
+            }
+            const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+            const user = await usersService.create({ email, passwordHash, role });
+            console.log(`Created ${role} ${user.email} (${user.id})`);
+            return user;
+        };
+        const demo = await seedUser(DEMO_EMAIL, DEMO_PASSWORD, enums_1.UserRole.USER);
+        await seedUser(ADMIN_EMAIL, ADMIN_PASSWORD, enums_1.UserRole.ADMIN);
+        const existingProfile = await cvProfileService.getProfile(demo.id);
+        if (!existingProfile) {
+            const profile = await cvProfileService.upsertProfile(demo.id, 'Full-stack engineer with strong experience in TypeScript, NestJS, and PostgreSQL. ' +
+                'Comfortable designing distributed systems, containerizing workloads with Docker, and owning features end to end.');
+            console.log(`Created CV profile ${profile.id}`);
+            for (const skill of DEMO_SKILLS) {
+                const created = await cvProfileService.addSkill(demo.id, skill.name, skill.category, skill.weight);
+                console.log(`  + skill: ${created.name} (${created.category}, w=${created.weight})`);
+            }
+            for (const idea of DEMO_IDEAS) {
+                const created = await ideasService.create(demo.id, idea);
+                await scoringService.scoreIdea(created.id, demo.id);
+                console.log(`Created + scored idea: ${created.title} (${created.id})`);
+            }
         }
-        const passwordHash = await bcrypt.hash(DEMO_PASSWORD, SALT_ROUNDS);
-        const user = await usersService.create({ email: DEMO_EMAIL, passwordHash });
-        console.log(`Created demo user ${user.email} (${user.id})`);
-        const profile = await cvProfileService.upsertProfile(user.id, 'Full-stack engineer with strong experience in TypeScript, NestJS, and PostgreSQL. ' +
-            'Comfortable designing distributed systems, containerizing workloads with Docker, and owning features end to end.');
-        console.log(`Created CV profile ${profile.id}`);
-        for (const skill of DEMO_SKILLS) {
-            const created = await cvProfileService.addSkill(user.id, skill.name, skill.category, skill.weight);
-            console.log(`  + skill: ${created.name} (${created.category}, w=${created.weight})`);
-        }
-        for (const idea of DEMO_IDEAS) {
-            const created = await ideasService.create(user.id, idea);
-            await scoringService.scoreIdea(created.id, user.id);
-            console.log(`Created + scored idea: ${created.title} (${created.id})`);
+        else {
+            console.log('Demo user CV profile already exists. Skipping CV + ideas.');
         }
         console.log('\nSeeding complete.');
-        console.log(`  email:    ${DEMO_EMAIL}`);
-        console.log(`  password: ${DEMO_PASSWORD}`);
+        console.log(`  user:  ${DEMO_EMAIL} / ${DEMO_PASSWORD} (${enums_1.UserRole.USER})`);
+        console.log(`  admin: ${ADMIN_EMAIL} / ${ADMIN_PASSWORD} (${enums_1.UserRole.ADMIN})`);
     }
     finally {
         await app.close();

@@ -1,163 +1,325 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description"
-    content="Idea Dump: A personal command center for capturing, scoring, and ranking your project ideas against your CV profile using rule-based and ML-driven heuristics.">
-  <title>Idea Dump — Command Center</title>
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap"
-    rel="stylesheet">
-  <!-- Lucide Icons -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Idea Dump — A personal command center for capturing, scoring, and ranking your project ideas." />
+  <title>Idea Dump</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
   <script src="https://unpkg.com/lucide@latest"></script>
-  <!-- Custom Stylesheet -->
-  <link rel="stylesheet" href="style.css">
+  <style>
+    .view { display: none; }
+    .view.active { display: block; }
+    #auth-check {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; color: var(--text-secondary); font-size: 1.1rem;
+      gap: 0.75rem;
+    }
+  </style>
 </head>
-
 <body>
 
-  <!-- Top Navigation / Status Header -->
-  <header class="app-header">
-    <div class="header-logo">
-      <div class="logo-mark"></div>
-      <h1>Idea Dump</h1>
-    </div>
-    <div class="header-actions">
-      <div id="connection-badge" class="badge badge-offline">
-        <span class="indicator"></span>
-        <span class="label">Mock Mode</span>
+  <!-- ═══ Auth Check Spinner ═══ -->
+  <div id="auth-check">
+    <span class="spin" style="font-size:1.5rem">&#8635;</span>
+    <span>Checking session...</span>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       LANDING VIEW (not authenticated)
+       ════════════════════════════════════════════════════════════════ -->
+  <div id="landing-view" class="view">
+
+    <nav class="landing-nav container">
+      <div class="brand">
+        <img class="logo-mark" src="/app/logo.png" alt="Idea Dump" />
+        <span>Idea Dump</span>
       </div>
-      <div id="auth-section">
-        <button id="auth-btn" class="btn btn-secondary">
-          <i data-lucide="key-round"></i> Authenticate
+      <div class="nav-links">
+        <a href="#about">About</a>
+        <a href="#how-it-works">How it works</a>
+        <a href="#use-cases">Use cases</a>
+        <a href="#scoring">Scoring</a>
+        <button id="landing-auth-btn" class="btn btn-primary btn-sm">
+          <i data-lucide="key-round"></i> Sign In
         </button>
       </div>
-    </div>
-  </header>
+    </nav>
 
-  <!-- Main Grid Layout -->
-  <main class="app-container">
-
-    <!-- Left Column: CV Profile & Skills -->
-    <aside class="sidebar">
-      <section class="card cv-profile-card">
-        <div class="card-header">
-          <i data-lucide="user"></i>
-          <h2>CV Profile</h2>
-        </div>
-        <div class="card-body">
-          <div class="form-group">
-            <label for="cv-summary">Professional Summary</label>
-            <textarea id="cv-summary" placeholder="Describe your experience, stack, and domain expertise..."></textarea>
-            <button id="save-summary-btn" class="btn btn-primary btn-sm">
-              Save Summary
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <section class="card cv-skills-card">
-        <div class="card-header">
-          <i data-lucide="award"></i>
-          <h2>Core Skills</h2>
-          <button id="add-skill-trigger" class="btn btn-icon" title="Add skill">
-            <i data-lucide="plus"></i>
-          </button>
-        </div>
-        <div class="card-body">
-          <div id="skills-list" class="skills-grid">
-            <!-- Dynamically populated skills -->
-            <div class="empty-state">
-              <p>No skills added yet. Define your profile to calibrate the scoring engine.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-    </aside>
-
-    <!-- Right Column: Ideas Command Deck -->
-    <section class="content-deck">
-
-      <!-- Idea Submitter -->
-      <section class="card submission-card">
-        <div class="card-header">
-          <i data-lucide="lightbulb"></i>
-          <h2>Capture Project Idea</h2>
-          <span class="quota-counter" id="quota-display">Quota: 2 / 2 remaining</span>
-        </div>
-        <form id="idea-form" class="card-body">
-          <div class="form-row">
-            <div class="form-group flex-2">
-              <label for="idea-title">Title</label>
-              <input type="text" id="idea-title" placeholder="e.g., Real-time Collaborative Markdown Editor" required>
-            </div>
-            <div class="form-group flex-1">
-              <label for="idea-status">Status</label>
-              <select id="idea-status">
-                <option value="inbox">Inbox</option>
-                <option value="active">Active</option>
-                <option value="archived">Archived</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="idea-desc">Description</label>
-            <textarea id="idea-desc" placeholder="What is the problem statement and core value proposition?..."
-              required></textarea>
-          </div>
-
-          <div class="form-group">
-            <label for="idea-features">Key Features (comma separated)</label>
-            <input type="text" id="idea-features"
-              placeholder="e.g., Yjs CRDTs, WebSocket syncing, Version history, Theme toggle">
-          </div>
-
-          <div class="form-group">
-            <label for="idea-usecase">Target Use Case</label>
-            <textarea id="idea-usecase"
-              placeholder="Who benefits from this? How does it demonstrate your engineering capability?..."
-              required></textarea>
-          </div>
-
-          <button type="submit" class="btn btn-primary">
-            <i data-lucide="plus-circle"></i> Submit & Score Idea
-          </button>
-        </form>
-      </section>
-
-      <!-- Ranked Ideas Stack -->
-      <section class="ideas-deck">
-        <div class="deck-header">
-          <div class="deck-title-group">
-            <i data-lucide="trending-up"></i>
-            <h2>Prioritized Backlog</h2>
-          </div>
-          <button id="rescore-all-btn" class="btn btn-secondary btn-sm" style="display:none">
-            <i data-lucide="rotate-cw"></i> Rescore Backlog
-          </button>
-        </div>
-        <div id="ideas-stack" class="stack-layout">
-          <!-- Dynamically populated cards -->
-          <div class="empty-state">
-            <i data-lucide="inbox" class="icon-lg"></i>
-            <h3>No ideas captured</h3>
-            <p>Your prioritized backlog will formulate once you submit your first project idea.</p>
-          </div>
-        </div>
-      </section>
+    <section class="hero container">
+      <div class="eyebrow">
+        <span>v1.0 &middot; Open source &middot; Rule-based scoring</span>
+      </div>
+      <h1>
+        Turn your idea backlog<br />
+        into a <span class="text-gradient">prioritised build plan</span>
+      </h1>
+      <p class="lead">
+        Idea Dump is a personal command centre for developers who have more project ideas than time.
+        Capture ideas, score them against your actual skills and experience, and let the engine surface what you should build next.
+      </p>
+      <div class="cta-row">
+        <button id="landing-cta-btn" class="btn btn-primary">
+          <i data-lucide="rocket"></i> Get Started — It's Free
+        </button>
+        <a href="#about" class="btn btn-secondary">
+          <i data-lucide="info"></i> Learn More
+        </a>
+      </div>
     </section>
 
-  </main>
+    <section id="about" class="section container">
+      <div class="section-head">
+        <h2>What is Idea Dump?</h2>
+        <p>A full-stack web application that helps software engineers and indie builders decide which project idea to work on next.</p>
+      </div>
+      <div class="grid-2">
+        <div class="feature-card glass">
+          <h3>The Problem</h3>
+          <p>You have dozens of project ideas — a real-time editor, an AI code review bot, a self-hosted analytics pipeline. But which one aligns best with your current skills? Which is worth the effort? Without data, you pick arbitrarily or get stuck in analysis paralysis.</p>
+        </div>
+        <div class="feature-card glass">
+          <h3>The Solution</h3>
+          <p>Idea Dump lets you dump every idea freely, then automatically scores each one against your <strong>CV profile</strong> — your skills, categories, and proficiency weights. The result is a ranked backlog ordered by CV-fit, estimated effort, and novelty. No spreadsheets, no gut-feel.</p>
+        </div>
+      </div>
+    </section>
 
-  <!-- Modals & Dialogs -->
+    <section id="how-it-works" class="section container">
+      <div class="section-head">
+        <h2>How it works</h2>
+        <p>From idea dump to prioritised backlog in three steps.</p>
+      </div>
+      <div class="steps">
+        <div class="step glass">
+          <div class="num">01</div>
+          <h3>Build your CV profile</h3>
+          <p>Add a professional summary and your core skills (languages, frameworks, tools, domain expertise) with proficiency weights (1–5). This calibrates the scoring engine to <em>your</em> unique stack.</p>
+        </div>
+        <div class="step glass">
+          <div class="num">02</div>
+          <h3>Dump your ideas</h3>
+          <p>Submit project ideas with title, description, key features, and target use case. Each idea is automatically scored the moment you submit it — no manual review needed.</p>
+        </div>
+        <div class="step glass">
+          <div class="num">03</div>
+          <h3>Review your ranked backlog</h3>
+          <p>Your backlog is sorted by computed priority. Pin a favourite, assign a manual rank to override the algorithm, or rescore anytime after updating your CV profile.</p>
+        </div>
+      </div>
+    </section>
 
-  <!-- Add Skill Modal -->
+    <section id="use-cases" class="section container">
+      <div class="section-head">
+        <h2>Who is this for?</h2>
+        <p>Real scenarios where Idea Dump changes how you decide.</p>
+      </div>
+      <div class="grid-3">
+        <div class="feature-card glass">
+          <div class="ico"><i data-lucide="user"></i></div>
+          <h3>Portfolio builders</h3>
+          <p>You're building projects to showcase for job applications. Score each idea against your current skill stack and pick the one that maximises learning impact while staying feasible.</p>
+        </div>
+        <div class="feature-card glass">
+          <div class="ico"><i data-lucide="users"></i></div>
+          <h3>Indie makers</h3>
+          <p>You have a backlog of SaaS ideas but limited time. Let the engine surface the idea with the best skill-fit so you ship faster instead of second-guessing.</p>
+        </div>
+        <div class="feature-card glass">
+          <div class="ico"><i data-lucide="graduation-cap"></i></div>
+          <h3>Career switchers</h3>
+          <p>You're moving into a new tech stack and want to build projects that reinforce your new skills. Update your CV profile and the scoring automatically adapts.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="scoring" class="section container">
+      <div class="section-head">
+        <h2>How scoring works</h2>
+        <p>Transparent, deterministic, and explainable — no black box.</p>
+      </div>
+      <div class="grid-3">
+        <div class="feature-card glass">
+          <h3>Fit score (50%)</h3>
+          <p>Tokenizes the idea's title, description, features, and use case, then matches them against your <strong>CvSkill.name</strong> entries weighted by proficiency. Higher overlap = higher fit.</p>
+        </div>
+        <div class="feature-card glass">
+          <h3>Effort score (30%)</h3>
+          <p>Derived from feature count and description length as a proxy for scope. Lower effort is rewarded (inverted in the final aggregation) so achievable ideas rise to the top.</p>
+        </div>
+        <div class="feature-card glass">
+          <h3>Novelty score (20%)</h3>
+          <p>Measures how different an idea is from your existing idea set using text similarity. Diverse ideas score higher, preventing a backlog full of variations on the same theme.</p>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:1.5rem">
+        <p style="color:var(--text-secondary);font-size:0.9rem">
+          Final score = 0.5 &times; fit + 0.3 &times; (100 &minus; effort) + 0.2 &times; novelty
+          &nbsp;&middot;&nbsp; Weights are configurable via environment variables.
+        </p>
+      </div>
+    </section>
+
+    <section id="tech" class="section container">
+      <div class="section-head">
+        <h2>Built with production-grade tooling</h2>
+        <p>The same stack used in real-world backends, deployed to production.</p>
+      </div>
+      <div class="grid-3">
+        <div class="feature-card glass">
+          <h3>Backend</h3>
+          <p>TypeScript, NestJS, MikroORM, PostgreSQL, Redis, Passport.js (JWT RS256 + OAuth2)</p>
+        </div>
+        <div class="feature-card glass">
+          <h3>Frontend</h3>
+          <p>Vanilla JS SPA with responsive CSS grid, glassmorphism design system, Lucide icons</p>
+        </div>
+        <div class="feature-card glass">
+          <h3>Infrastructure</h3>
+          <p>Docker multi-stage build, GitHub Container Registry, Traefik reverse proxy, Infisical secrets, Cloudflare DNS + TLS</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section container">
+      <div class="cta-band glass">
+        <h2>Stop guessing. Start building.</h2>
+        <p>Register in seconds, build your CV profile, and let the engine rank your ideas.</p>
+        <button id="landing-footer-cta" class="btn btn-primary">
+          <i data-lucide="rocket"></i> Launch the App
+        </button>
+      </div>
+    </section>
+
+    <footer class="site-footer container">
+      <p>Idea Dump &middot; MIT License &middot; Built with NestJS &middot; Part of the portfolio project sequence</p>
+    </footer>
+
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       DASHBOARD VIEW (authenticated as user)
+       ════════════════════════════════════════════════════════════════ -->
+  <div id="dashboard-view" class="view">
+
+    <header class="app-header">
+      <div class="header-logo">
+        <img class="logo-mark" src="/app/logo.png" alt="Idea Dump" />
+        <h1>Idea Dump</h1>
+      </div>
+      <div class="header-actions">
+        <div id="connection-badge" class="badge badge-offline">
+          <span class="indicator"></span>
+          <span class="label">Mock Mode</span>
+        </div>
+        <div id="auth-section">
+          <button id="auth-btn" class="btn btn-secondary">
+            <i data-lucide="key-round"></i> Authenticate
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-container">
+      <aside class="sidebar">
+        <section class="card cv-profile-card">
+          <div class="card-header">
+            <i data-lucide="user"></i>
+            <h2>CV Profile</h2>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label for="cv-summary">Professional Summary</label>
+              <textarea id="cv-summary" placeholder="Describe your experience, stack, and domain expertise..."></textarea>
+              <button id="save-summary-btn" class="btn btn-primary btn-sm">Save Summary</button>
+            </div>
+          </div>
+        </section>
+        <section class="card cv-skills-card">
+          <div class="card-header">
+            <i data-lucide="award"></i>
+            <h2>Core Skills</h2>
+            <button id="add-skill-trigger" class="btn btn-icon" title="Add skill">
+              <i data-lucide="plus"></i>
+            </button>
+          </div>
+          <div class="card-body">
+            <div id="skills-list" class="skills-grid">
+              <div class="empty-state">
+                <p>No skills added yet. Define your profile to calibrate the scoring engine.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </aside>
+
+      <section class="content-deck">
+        <section class="card submission-card">
+          <div class="card-header">
+            <i data-lucide="lightbulb"></i>
+            <h2>Capture Project Idea</h2>
+            <span class="quota-counter" id="quota-display">Quota: 2 / 2 remaining</span>
+          </div>
+          <form id="idea-form" class="card-body">
+            <div class="form-row">
+              <div class="form-group flex-2">
+                <label for="idea-title">Title</label>
+                <input type="text" id="idea-title" placeholder="e.g., Real-time Collaborative Markdown Editor" required />
+              </div>
+              <div class="form-group flex-1">
+                <label for="idea-status">Status</label>
+                <select id="idea-status">
+                  <option value="inbox">Inbox</option>
+                  <option value="active">Active</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="idea-desc">Description</label>
+              <textarea id="idea-desc" placeholder="What is the problem statement and core value proposition?..." required></textarea>
+            </div>
+            <div class="form-group">
+              <label for="idea-features">Key Features (comma separated)</label>
+              <input type="text" id="idea-features" placeholder="e.g., Yjs CRDTs, WebSocket syncing, Version history, Theme toggle" />
+            </div>
+            <div class="form-group">
+              <label for="idea-usecase">Target Use Case</label>
+              <textarea id="idea-usecase" placeholder="Who benefits from this? How does it demonstrate your engineering capability?..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">
+              <i data-lucide="plus-circle"></i> Submit & Score Idea
+            </button>
+          </form>
+        </section>
+
+        <section class="ideas-deck">
+          <div class="deck-header">
+            <div class="deck-title-group">
+              <i data-lucide="trending-up"></i>
+              <h2>Prioritized Backlog</h2>
+            </div>
+            <button id="rescore-all-btn" class="btn btn-secondary btn-sm" style="display:none">
+              <i data-lucide="rotate-cw"></i> Rescore Backlog
+            </button>
+          </div>
+          <div id="ideas-stack" class="stack-layout">
+            <div class="empty-state">
+              <i data-lucide="inbox" class="icon-lg"></i>
+              <h3>No ideas captured</h3>
+              <p>Your prioritized backlog will formulate once you submit your first project idea.</p>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+  </div>
+
+  <!-- ═══ Modals ═══ -->
   <div id="skill-modal" class="modal-overlay">
     <div class="modal-card">
       <div class="modal-header">
@@ -167,7 +329,7 @@
       <form id="skill-form" class="modal-body">
         <div class="form-group">
           <label for="skill-name">Skill Name</label>
-          <input type="text" id="skill-name" placeholder="e.g., NestJS, TypeScript, Kubernetes" required>
+          <input type="text" id="skill-name" placeholder="e.g., NestJS, TypeScript, Kubernetes" required />
         </div>
         <div class="form-group">
           <label for="skill-category">Category</label>
@@ -181,7 +343,7 @@
         <div class="form-group">
           <label for="skill-weight">Proficiency / Relevance (1-5)</label>
           <div class="weight-slider-container">
-            <input type="range" id="skill-weight" min="1" max="5" value="3">
+            <input type="range" id="skill-weight" min="1" max="5" value="3" />
             <span id="skill-weight-bubble" class="weight-bubble">3</span>
           </div>
         </div>
@@ -190,7 +352,6 @@
     </div>
   </div>
 
-  <!-- Manual Rank Override Modal -->
   <div id="rank-modal" class="modal-overlay">
     <div class="modal-card">
       <div class="modal-header">
@@ -198,15 +359,14 @@
         <button class="modal-close"><i data-lucide="x"></i></button>
       </div>
       <form id="rank-form" class="modal-body">
-        <input type="hidden" id="rank-idea-id">
+        <input type="hidden" id="rank-idea-id" />
         <div class="form-group-checkbox">
-          <input type="checkbox" id="rank-pinned">
+          <input type="checkbox" id="rank-pinned" />
           <label for="rank-pinned">Pin idea to top of backlog</label>
         </div>
         <div class="form-group">
           <label for="rank-manual">Manual Override Rank Index</label>
-          <input type="number" id="rank-manual" min="1"
-            placeholder="e.g., 1 (highest), empty to fall back to computed scores">
+          <input type="number" id="rank-manual" min="1" placeholder="e.g., 1 (highest), empty to fall back to computed scores" />
         </div>
         <div class="modal-actions">
           <button type="button" id="clear-rank-btn" class="btn btn-danger">Reset Override</button>
@@ -216,7 +376,6 @@
     </div>
   </div>
 
-  <!-- Authentication Modal -->
   <div id="auth-modal" class="modal-overlay">
     <div class="modal-card">
       <div class="modal-header">
@@ -231,31 +390,23 @@
         <form id="auth-form">
           <div class="form-group">
             <label for="auth-email">Email Address</label>
-            <input type="email" id="auth-email" required placeholder="name@domain.com">
+            <input type="email" id="auth-email" required placeholder="name@domain.com" />
           </div>
           <div class="form-group">
             <label for="auth-password">Password</label>
-            <input type="password" id="auth-password" required minlength="8" placeholder="••••••••">
+            <input type="password" id="auth-password" required minlength="8" placeholder="••••••••" />
           </div>
           <button type="submit" id="auth-submit-btn" class="btn btn-primary btn-block">Sign In</button>
         </form>
-        <div class="auth-divider">
-          <span>Or authenticate via OAuth</span>
-        </div>
+        <div class="auth-divider"><span>Or authenticate via OAuth</span></div>
         <div class="oauth-buttons">
-          <button id="google-auth-btn" class="btn btn-secondary">
-            <i data-lucide="chrome"></i> Google
-          </button>
-          <button id="github-auth-btn" class="btn btn-secondary">
-            <i data-lucide="github"></i> GitHub
-          </button>
+          <button id="google-auth-btn" class="btn btn-secondary"><i data-lucide="chrome"></i> Google</button>
+          <button id="github-auth-btn" class="btn btn-secondary"><i data-lucide="github"></i> GitHub</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Core Script -->
   <script src="app.js"></script>
 </body>
-
 </html>

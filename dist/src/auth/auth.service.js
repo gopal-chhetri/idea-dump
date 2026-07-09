@@ -128,7 +128,7 @@ let AuthService = class AuthService {
         return this.issueTokens(user);
     }
     async issueTokens(user) {
-        const payload = { sub: user.id, email: user.email };
+        const payload = { sub: user.id, email: user.email, role: user.role };
         const accessToken = await this.jwtService.signAsync(payload);
         const rawRefreshToken = crypto.randomBytes(32).toString('hex');
         const tokenHash = this.hashToken(rawRefreshToken);

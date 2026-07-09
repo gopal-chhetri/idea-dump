@@ -1,0 +1,92 @@
+name: idea-prioritizer
+
+services:
+  app:
+    image: ghcr.io/${REGISTRY_OWNER:-gopal-chhetri}/idea-prioritizer:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - JWT_PRIVATE_KEY=${JWT_PRIVATE_KEY}
+      - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY}
+      - JWT_ACCESS_EXPIRY=${JWT_ACCESS_EXPIRY:-15m}
+      - JWT_REFRESH_EXPIRY=${JWT_REFRESH_EXPIRY:-7d}
+      - APP_ENCRYPTION_KEY=${APP_ENCRYPTION_KEY}
+      - SCORE_WEIGHT_FIT=${SCORE_WEIGHT_FIT:-0.5}
+      - SCORE_WEIGHT_EFFORT=${SCORE_WEIGHT_EFFORT:-0.3}
+      - SCORE_WEIGHT_NOVELTY=${SCORE_WEIGHT_NOVELTY:-0.2}
+      - IDEA_DAILY_LIMIT=${IDEA_DAILY_LIMIT:-2}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      - GOOGLE_CALLBACK_URL=${GOOGLE_CALLBACK_URL:-}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
+      - GITHUB_CALLBACK_URL=${GITHUB_CALLBACK_URL:-}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.idea-prioritizer.rule=Host(`${DOMAIN:-ideas.soylab.dpdns.org}`)"
+      - "traefik.http.routers.idea-prioritizer.entrypoints=websecure"
+      - "traefik.http.routers.idea-prioritizer.tls.certresolver=letsencrypt"
+      - "traefik.http.services.idea-prioritizer.loadbalancer.server.port=3000"
+    networks:
+      - traefik-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  migrate:
+    image: ghcr.io/${REGISTRY_OWNER:-gopal-chhetri}/idea-prioritizer:${IMAGE_TAG:-latest}
+    restart: "no"
+    environment:
+      - DB_HOST=postgres
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+    command: ["node", "dist/src/migrate.js"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - default
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - default
+
+volumes:
+  pgdata:
+  redisdata:
+
+networks:
+  traefik-network:
+    external: true

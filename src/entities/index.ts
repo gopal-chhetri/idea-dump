@@ -8,3 +8,4 @@ export * from './idea.entity';
 export * from './idea-score.entity';
 export * from './idea-rank-override.entity';
 export * from './daily-idea-quota.entity';
+export * from './system-setting.entity';

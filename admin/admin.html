@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Idea Dump</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet" />
+    <link rel="stylesheet" href="/app/style.css" />
+</head>
+
+<body>
+  <div id="app" class="admin-shell">
+
+    <!-- ═══ Header ═══ -->
+    <header class="app-header">
+      <div class="header-logo">
+        <img class="logo-mark" src="/app/logo.png" alt="Idea Dump" />
+        <h1>Admin Panel</h1>
+      </div>
+      <div class="header-actions">
+        <span id="admin-email" style="color:var(--text-secondary);font-size:0.85rem;"></span>
+        <button id="logout-btn" class="btn btn-sm btn-secondary" style="display:none">Sign Out</button>
+      </div>
+    </header>
+
+    <!-- ═══ Login Screen ═══ -->
+    <div id="login-screen" class="admin-main">
+      <div class="container" style="max-width:420px;margin:4rem auto">
+        <div class="card">
+          <div class="card-header">
+            <h2>Admin Sign In</h2>
+          </div>
+          <form id="login-form" class="card-body">
+            <div class="form-group">
+              <label for="login-email">Email</label>
+              <input type="email" id="login-email" required placeholder="admin@example.com" />
+            </div>
+            <div class="form-group">
+              <label for="login-password">Password</label>
+              <input type="password" id="login-password" required placeholder="••••••••" />
+            </div>
+            <p id="login-error" style="color:var(--danger-color);font-size:0.85rem;min-height:1.2rem;"></p>
+            <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Dashboard ═══ -->
+    <div id="dashboard-screen" style="display:none">
+      <div class="admin-main container">
+        <div class="admin-grid">
+          <!-- Sidebar -->
+          <nav class="admin-side glass">
+            <a href="#" data-section="overview" class="active"><i data-lucide="layout-dashboard"></i> Overview</a>
+            <a href="#" data-section="users"><i data-lucide="users"></i> Users</a>
+            <a href="#" data-section="ideas"><i data-lucide="lightbulb"></i> Ideas</a>
+            <a href="#" data-section="settings"><i data-lucide="settings"></i> Settings</a>
+          </nav>
+
+          <!-- Content -->
+          <div class="admin-content">
+
+            <!-- Overview -->
+            <section id="section-overview" class="section-content">
+              <h2 style="margin-bottom:1.25rem">Platform Overview</h2>
+              <div class="stat-grid" id="stats-grid">
+                <div class="stat-tile glass">
+                  <div class="v" id="stat-users">—</div>
+                  <div class="k">Total Users</div>
+                </div>
+                <div class="stat-tile glass">
+                  <div class="v" id="stat-admins">—</div>
+                  <div class="k">Admins</div>
+                </div>
+                <div class="stat-tile glass">
+                  <div class="v" id="stat-ideas">—</div>
+                  <div class="k">Ideas</div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Users -->
+            <section id="section-users" class="section-content" style="display:none">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+                <h2>Users</h2>
+                <button id="create-user-btn" class="btn btn-primary btn-sm"><i data-lucide="plus"></i> Create
+                  User</button>
+              </div>
+              <div class="table-wrap glass">
+                <table class="data" id="users-table">
+                  <thead>
+                    <tr>
+                      <th>Email</th>
+                      <th>Role</th>
+                      <th>Created</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="users-tbody"></tbody>
+                </table>
+              </div>
+              <div style="margin-top:0.75rem;display:flex;gap:0.5rem;align-items:center">
+                <button id="users-prev" class="btn btn-sm btn-secondary"><i data-lucide="chevron-left"></i>
+                  Prev</button>
+                <span id="users-page-info" style="color:var(--text-secondary);font-size:0.85rem">Page 1</span>
+                <button id="users-next" class="btn btn-sm btn-secondary">Next <i
+                    data-lucide="chevron-right"></i></button>
+              </div>
+            </section>
+
+            <!-- Ideas -->
+            <section id="section-ideas" class="section-content" style="display:none">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+                <h2>Ideas</h2>
+                <button id="rescore-all-btn" class="btn btn-coral btn-sm"><i data-lucide="rotate-cw"></i> Rescore
+                  All</button>
+              </div>
+              <div class="table-wrap glass">
+                <table class="data" id="ideas-table">
+                  <thead>
+                    <tr>
+                      <th>Title</th>
+                      <th>User</th>
+                      <th>Score</th>
+                      <th>Status</th>
+                      <th>Created</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="ideas-tbody"></tbody>
+                </table>
+              </div>
+              <div style="margin-top:0.75rem;display:flex;gap:0.5rem;align-items:center">
+                <button id="ideas-prev" class="btn btn-sm btn-secondary"><i data-lucide="chevron-left"></i>
+                  Prev</button>
+                <span id="ideas-page-info" style="color:var(--text-secondary);font-size:0.85rem">Page 1</span>
+                <button id="ideas-next" class="btn btn-sm btn-secondary">Next <i
+                    data-lucide="chevron-right"></i></button>
+              </div>
+            </section>
+
+            <!-- Settings -->
+            <section id="section-settings" class="section-content" style="display:none">
+              <h2 style="margin-bottom:1rem">System Settings</h2>
+              <div class="glass" style="padding:1.5rem">
+                <div id="settings-list" style="margin-bottom:1.5rem"></div>
+                <form id="settings-form" class="card-body" style="padding:0">
+                  <h3 style="margin-bottom:0.75rem">Add / Update Setting</h3>
+                  <div class="form-group">
+                    <label for="setting-key">Key</label>
+                    <input type="text" id="setting-key" placeholder="e.g. ai.openai.apiKey" />
+                  </div>
+                  <div class="form-group">
+                    <label for="setting-value">Value</label>
+                    <input type="text" id="setting-value" placeholder="Value (encrypted at rest)" />
+                  </div>
+                  <button type="submit" class="btn btn-primary"><i data-lucide="save"></i> Save Setting</button>
+                </form>
+              </div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Create User Modal ── -->
+  <div id="create-user-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>Create User</h2>
+        <button class="modal-close" data-close="create-user-modal"><i data-lucide="x"></i></button>
+      </div>
+      <form id="create-user-form" class="modal-body">
+        <div class="form-group">
+          <label for="cu-email">Email</label>
+          <input type="email" id="cu-email" required />
+        </div>
+        <div class="form-group">
+          <label for="cu-password">Password (optional)</label>
+          <input type="password" id="cu-password" />
+        </div>
+        <div class="form-group">
+          <label for="cu-role">Role</label>
+          <select id="cu-role">
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <p id="cu-error" style="color:var(--danger-color);font-size:0.85rem;min-height:1.2rem"></p>
+        <button type="submit" class="btn btn-primary btn-block">Create</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="admin.js"></script>
+</body>
+
+</html>

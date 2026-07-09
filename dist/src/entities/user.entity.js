@@ -17,11 +17,13 @@ const oauth_account_entity_1 = require("./oauth-account.entity");
 const refresh_token_entity_1 = require("./refresh-token.entity");
 const cv_profile_entity_1 = require("./cv-profile.entity");
 const idea_entity_1 = require("./idea.entity");
+const enums_1 = require("./enums");
 let User = class User {
     [core_1.OptionalProps];
     id = (0, uuid_1.v4)();
     email;
     passwordHash;
+    role = enums_1.UserRole.USER;
     createdAt = new Date();
     oauthAccounts = new core_1.Collection(this);
     refreshTokens = new core_1.Collection(this);
@@ -41,6 +43,10 @@ __decorate([
     (0, legacy_1.Property)({ nullable: true, type: 'string' }),
     __metadata("design:type", String)
 ], User.prototype, "passwordHash", void 0);
+__decorate([
+    (0, legacy_1.Property)({ type: 'text', default: enums_1.UserRole.USER }),
+    __metadata("design:type", String)
+], User.prototype, "role", void 0);
 __decorate([
     (0, legacy_1.Property)({ type: 'datetime' }),
     __metadata("design:type", Date)

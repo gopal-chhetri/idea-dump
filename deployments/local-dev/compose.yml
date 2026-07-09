@@ -7,9 +7,14 @@ services:
       - '3000:3000'
     env_file: ../../.env
     environment:
-      # Inside the compose network the DB/Redis are reachable by service name
       - DB_HOST=postgres
       - REDIS_HOST=redis
+    volumes:
+      # Mount source for hot-reload (exclude node_modules to keep container deps)
+      - ../../src:/app/src
+      - ../../frontend:/app/frontend
+      - ../../public:/app/public
+      - ../../admin:/app/admin
     depends_on:
       postgres:
         condition: service_healthy

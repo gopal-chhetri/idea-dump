@@ -1,11 +1,16 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ScoringMethod = exports.IdeaStatus = exports.SkillCategory = exports.OAuthProvider = void 0;
+exports.ScoringMethod = exports.IdeaStatus = exports.SkillCategory = exports.UserRole = exports.OAuthProvider = void 0;
 var OAuthProvider;
 (function (OAuthProvider) {
     OAuthProvider["GOOGLE"] = "google";
     OAuthProvider["GITHUB"] = "github";
 })(OAuthProvider || (exports.OAuthProvider = OAuthProvider = {}));
+var UserRole;
+(function (UserRole) {
+    UserRole["USER"] = "user";
+    UserRole["ADMIN"] = "admin";
+})(UserRole || (exports.UserRole = UserRole = {}));
 var SkillCategory;
 (function (SkillCategory) {
     SkillCategory["LANGUAGE"] = "language";
