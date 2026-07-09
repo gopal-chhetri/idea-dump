@@ -8,5 +8,9 @@ export interface ScoringResult {
 }
 
 export interface ScoringStrategy {
-  score(idea: Idea, profile: CvProfile, userIdeas: Idea[]): Promise<ScoringResult>;
+  score(
+    idea: Idea,
+    profile: CvProfile,
+    userIdeas: Idea[],
+  ): Promise<ScoringResult>;
 }

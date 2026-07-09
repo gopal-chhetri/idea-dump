@@ -1,7 +1,4 @@
-import {
-  Collection,
-  OptionalProps,
-} from '@mikro-orm/core';
+import { Collection, OptionalProps } from '@mikro-orm/core';
 import {
   Entity,
   PrimaryKey,
@@ -19,7 +16,8 @@ import { IdeaRankOverride } from './idea-rank-override.entity';
 
 @Entity({ tableName: 'ideas' })
 export class Idea {
-  [OptionalProps]?: 'id' | 'features' | 'status' | 'createdAt' | 'scores' | 'rankOverride';
+  [OptionalProps]?:
+    'id' | 'features' | 'status' | 'createdAt' | 'scores' | 'rankOverride';
   @PrimaryKey({ type: 'uuid' })
   id: string = v4();
 

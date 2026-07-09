@@ -1,14 +1,17 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { Request, Response } from 'express';
+import { join } from 'node:path';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // Enable CORS for the local frontend dev server
   app.enableCors({
@@ -28,6 +31,12 @@ async function bootstrap() {
     res.status(200).json({ status: 'ok' });
   });
 
+  // Serve the static SPA at /app (zero extra deps — raw Express static)
+  app.useStaticAssets(join(process.cwd(), 'frontend'), { prefix: '/app' });
+  httpAdapter.get('/app', (_req: Request, res: Response) => {
+    res.redirect('/app/');
+  });
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -37,16 +46,29 @@ async function bootstrap() {
   );
 
   app.useGlobalFilters(new HttpExceptionFilter());
-  app.useGlobalInterceptors(new ResponseInterceptor());
+  app.useGlobalInterceptors(new LoggingInterceptor(), new ResponseInterceptor());
 
   const config = new DocumentBuilder()
-    .setTitle('Idea Prioritizer API')
-    .setDescription('The core API documentation for the Idea Prioritizer portfolio project.')
+    .setTitle('Idea Dump API')
+    .setDescription(
+      'The core API documentation for the Idea Dump portfolio project.',
+    )
     .setVersion('1.0')
     .addBearerAuth()
+    .addTag('Auth', 'Registration, login, token refresh, and OAuth flows')
+    .addTag(
+      'Ideas',
+      'CRUD, scoring, and ranking overrides for the idea backlog',
+    )
+    .addTag(
+      'CV Profile',
+      'Professional summary and skill calibration data used for fit scoring',
+    )
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+  SwaggerModule.setup('api/docs', app, document, {
+    swaggerOptions: { persistAuthorization: true },
+  });
 
   await app.listen(process.env.PORT ?? 3000);
 }

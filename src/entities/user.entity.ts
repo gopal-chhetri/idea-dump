@@ -1,7 +1,4 @@
-import {
-  Collection,
-  OptionalProps,
-} from '@mikro-orm/core';
+import { Collection, OptionalProps } from '@mikro-orm/core';
 import {
   Entity,
   PrimaryKey,
@@ -17,7 +14,14 @@ import { Idea } from './idea.entity';
 
 @Entity({ tableName: 'users' })
 export class User {
-  [OptionalProps]?: 'id' | 'createdAt' | 'passwordHash' | 'oauthAccounts' | 'refreshTokens' | 'cvProfile' | 'ideas';
+  [OptionalProps]?:
+    | 'id'
+    | 'createdAt'
+    | 'passwordHash'
+    | 'oauthAccounts'
+    | 'refreshTokens'
+    | 'cvProfile'
+    | 'ideas';
   @PrimaryKey({ type: 'uuid' })
   id: string = v4();
 

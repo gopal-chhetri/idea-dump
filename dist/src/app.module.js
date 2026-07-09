@@ -58,12 +58,13 @@ exports.AppModule = AppModule = __decorate([
         imports: [
             nestjs_1.MikroOrmModule.forRoot({
                 driver: postgresql_1.PostgreSqlDriver,
+                allowGlobalContext: true,
                 entities: Object.values(entities),
-                dbName: process.env.DB_NAME || 'idea_prioritizer',
+                dbName: process.env.DB_NAME || 'idea_dump',
                 host: process.env.DB_HOST || 'localhost',
                 port: Number(process.env.DB_PORT) || 5432,
                 user: process.env.DB_USER || 'postgres',
-                password: process.env.DB_PASSWORD || 'postgres',
+                password: process.env.DB_PASSWORD || 'password',
                 extensions: [migrations_1.Migrator],
                 migrations: {
                     path: './dist/migrations',

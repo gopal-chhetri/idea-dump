@@ -1,8 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  ScoringStrategy,
-  ScoringResult,
-} from './scoring-strategy.interface';
+import { ScoringStrategy, ScoringResult } from './scoring-strategy.interface';
 import { Idea } from '../../entities/idea.entity';
 import { CvProfile } from '../../entities/cv-profile.entity';
 import { CvSkill } from '../../entities/cv-skill.entity';
@@ -90,8 +87,7 @@ export class RuleBasedScoringStrategy implements ScoringStrategy {
       );
       const union = new Set([...ideaTokens, ...otherTokens]);
 
-      const jaccard =
-        union.size > 0 ? intersection.size / union.size : 0;
+      const jaccard = union.size > 0 ? intersection.size / union.size : 0;
       totalDistance += 1 - jaccard;
     }
 

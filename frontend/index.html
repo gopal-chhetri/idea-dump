@@ -1,26 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Idea Prioritizer: A personal command center for capturing, scoring, and ranking your project ideas against your CV profile using rule-based and ML-driven heuristics.">
-  <title>Idea Prioritizer — Command Center</title>
+  <meta name="description"
+    content="Idea Dump: A personal command center for capturing, scoring, and ranking your project ideas against your CV profile using rule-based and ML-driven heuristics.">
+  <title>Idea Dump — Command Center</title>
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap"
+    rel="stylesheet">
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Custom Stylesheet -->
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
   <!-- Top Navigation / Status Header -->
   <header class="app-header">
     <div class="header-logo">
       <div class="logo-mark"></div>
-      <h1>Idea Prioritizer</h1>
+      <h1>Idea Dump</h1>
     </div>
     <div class="header-actions">
       <div id="connection-badge" class="badge badge-offline">
@@ -37,7 +42,7 @@
 
   <!-- Main Grid Layout -->
   <main class="app-container">
-    
+
     <!-- Left Column: CV Profile & Skills -->
     <aside class="sidebar">
       <section class="card cv-profile-card">
@@ -77,7 +82,7 @@
 
     <!-- Right Column: Ideas Command Deck -->
     <section class="content-deck">
-      
+
       <!-- Idea Submitter -->
       <section class="card submission-card">
         <div class="card-header">
@@ -103,17 +108,21 @@
 
           <div class="form-group">
             <label for="idea-desc">Description</label>
-            <textarea id="idea-desc" placeholder="What is the problem statement and core value proposition?..." required></textarea>
+            <textarea id="idea-desc" placeholder="What is the problem statement and core value proposition?..."
+              required></textarea>
           </div>
 
           <div class="form-group">
             <label for="idea-features">Key Features (comma separated)</label>
-            <input type="text" id="idea-features" placeholder="e.g., Yjs CRDTs, WebSocket syncing, Version history, Theme toggle">
+            <input type="text" id="idea-features"
+              placeholder="e.g., Yjs CRDTs, WebSocket syncing, Version history, Theme toggle">
           </div>
 
           <div class="form-group">
             <label for="idea-usecase">Target Use Case</label>
-            <textarea id="idea-usecase" placeholder="Who benefits from this? How does it demonstrate your engineering capability?..." required></textarea>
+            <textarea id="idea-usecase"
+              placeholder="Who benefits from this? How does it demonstrate your engineering capability?..."
+              required></textarea>
           </div>
 
           <button type="submit" class="btn btn-primary">
@@ -147,7 +156,7 @@
   </main>
 
   <!-- Modals & Dialogs -->
-  
+
   <!-- Add Skill Modal -->
   <div id="skill-modal" class="modal-overlay">
     <div class="modal-card">
@@ -196,7 +205,8 @@
         </div>
         <div class="form-group">
           <label for="rank-manual">Manual Override Rank Index</label>
-          <input type="number" id="rank-manual" min="1" placeholder="e.g., 1 (highest), empty to fall back to computed scores">
+          <input type="number" id="rank-manual" min="1"
+            placeholder="e.g., 1 (highest), empty to fall back to computed scores">
         </div>
         <div class="modal-actions">
           <button type="button" id="clear-rank-btn" class="btn btn-danger">Reset Override</button>
@@ -247,4 +257,5 @@
   <!-- Core Script -->
   <script src="app.js"></script>
 </body>
+
 </html>

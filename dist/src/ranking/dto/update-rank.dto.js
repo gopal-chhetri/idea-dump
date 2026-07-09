@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UpdateRankDto = void 0;
+const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 class UpdateRankDto {
     manualRank;
@@ -17,11 +18,19 @@ class UpdateRankDto {
 }
 exports.UpdateRankDto = UpdateRankDto;
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        example: 1,
+        description: 'Force this idea to a specific position in the ranked list (1 = top). Set to null to remove override.',
+    }),
     (0, class_validator_1.IsInt)(),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], UpdateRankDto.prototype, "manualRank", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        example: true,
+        description: 'Pin this idea to always appear at the very top, above all other ranked ideas.',
+    }),
     (0, class_validator_1.IsBoolean)(),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Boolean)

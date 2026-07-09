@@ -20,7 +20,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "migration:create": "npx mikro-orm migration:create",
     "migration:up": "npx mikro-orm migration:up",
-    "migration:down": "npx mikro-orm migration:down"
+    "migration:down": "npx mikro-orm migration:down",
+    "seed": "ts-node --project tsconfig.seeder.json -r tsconfig-paths/register src/seeder/seeder.ts"
   },
   "mikro-orm": {
     "useTsNode": true,

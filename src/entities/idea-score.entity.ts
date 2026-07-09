@@ -1,6 +1,4 @@
-import {
-  OptionalProps,
-} from '@mikro-orm/core';
+import { OptionalProps } from '@mikro-orm/core';
 import {
   Entity,
   PrimaryKey,

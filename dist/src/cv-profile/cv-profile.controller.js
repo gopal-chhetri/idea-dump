@@ -14,6 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CvProfileController = void 0;
 const common_1 = require("@nestjs/common");
+const swagger_1 = require("@nestjs/swagger");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const cv_profile_service_1 = require("./cv-profile.service");
 const cv_profile_dto_1 = require("./dto/cv-profile.dto");
@@ -42,6 +43,15 @@ let CvProfileController = class CvProfileController {
 exports.CvProfileController = CvProfileController;
 __decorate([
     (0, common_1.Get)(),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Get CV profile',
+        description: 'Returns the user professional summary and calibrated skills.',
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'The CV profile (may be null if not yet created).',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Missing or invalid bearer token.' }),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -49,6 +59,12 @@ __decorate([
 ], CvProfileController.prototype, "getProfile", null);
 __decorate([
     (0, common_1.Put)(),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Upsert CV summary',
+        description: 'Creates or replaces the professional summary text used to calibrate idea scoring.',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Updated CV profile.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Missing or invalid bearer token.' }),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -57,6 +73,12 @@ __decorate([
 ], CvProfileController.prototype, "upsertProfile", null);
 __decorate([
     (0, common_1.Post)('skills'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Add a skill',
+        description: 'Adds a skill/category with a proficiency weight (1-5) used for fit scoring.',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 201, description: 'Skill created.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Missing or invalid bearer token.' }),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -65,6 +87,14 @@ __decorate([
 ], CvProfileController.prototype, "addSkill", null);
 __decorate([
     (0, common_1.Delete)('skills/:id'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Remove a skill',
+        description: 'Deletes a skill from the CV profile.',
+    }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Skill UUID' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Skill removed.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Missing or invalid bearer token.' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Skill not found.' }),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
@@ -72,6 +102,8 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], CvProfileController.prototype, "removeSkill", null);
 exports.CvProfileController = CvProfileController = __decorate([
+    (0, swagger_1.ApiTags)('CV Profile'),
+    (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Controller)('cv-profile'),
     __metadata("design:paramtypes", [cv_profile_service_1.CvProfileService])

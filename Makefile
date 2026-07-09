@@ -10,19 +10,20 @@ build:
 	pnpm run build
 
 up:
-	docker compose -f deployments/docker-compose.yml up --build
+	docker compose --env-file .env -f deployments/local-dev/compose.yml up --build
 
 down:
-	docker compose -f deployments/docker-compose.yml down
+	docker compose --env-file .env -f deployments/local-dev/compose.yml down
 
 migrate:
-	pnpm run migration:up
+	@set -a; [ -f .env ] && . ./.env; set +a; pnpm run migration:up
 
 migrate-down:
-	pnpm run migration:down
+	@set -a; [ -f .env ] && . ./.env; set +a; pnpm run migration:down
 
 seed:
-	@echo "No seed command configured yet. Implement your seeder first."
+	@set -a; [ -f .env ] && . ./.env; set +a; pnpm run seed
 
 swagger:
-	@echo "Swagger UI is running at http://localhost:3000/api/docs"
+	@echo "Swagger UI:      http://localhost:3000/api/docs"
+	@echo "SPA (frontend): http://localhost:3000/app"

@@ -36,10 +36,11 @@ let ScoringService = class ScoringService {
             throw new common_1.NotFoundException('Idea not found');
         const profile = await this.em.findOne(cv_profile_entity_1.CvProfile, { user: userId }, { populate: ['skills'] });
         const userIdeas = await this.em.find(idea_entity_1.Idea, { user: userId });
-        const scoringProfile = profile ?? this.em.create(cv_profile_entity_1.CvProfile, {
-            user: userId,
-            summaryText: '',
-        });
+        const scoringProfile = profile ??
+            this.em.create(cv_profile_entity_1.CvProfile, {
+                user: userId,
+                summaryText: '',
+            });
         const result = await this.ruleBasedStrategy.score(idea, scoringProfile, userIdeas);
         const finalScore = this.wFit * result.fitScore +
             this.wEffort * (100 - result.effortScore) +

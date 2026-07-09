@@ -14,6 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.IdeasController = void 0;
 const common_1 = require("@nestjs/common");
+const swagger_1 = require("@nestjs/swagger");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const rate_limit_guard_1 = require("../rate-limit/rate-limit.guard");
 const ideas_service_1 = require("./ideas.service");
@@ -72,6 +73,13 @@ exports.IdeasController = IdeasController;
 __decorate([
     (0, common_1.UseGuards)(rate_limit_guard_1.RateLimitGuard),
     (0, common_1.Post)(),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Create a new idea',
+        description: 'Captures a project idea and auto-scores it against the user CV profile. Subject to the daily idea quota.',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 201, description: 'Idea created and scored.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Missing or invalid bearer token.' }),
+    (0, swagger_1.ApiResponse)({ status: 429, description: 'Daily idea quota reached.' }),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -80,6 +88,12 @@ __decorate([
 ], IdeasController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
+    (0, swagger_1.ApiOperation)({
+        summary: 'List ranked ideas',
+        description: 'Returns the user ideas ordered by pinned, manual rank, then computed score.',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Ranked list of ideas.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Missing or invalid bearer token.' }),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -87,6 +101,14 @@ __decorate([
 ], IdeasController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Get a single idea',
+        description: 'Returns one idea with its scores and rank override.',
+    }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Idea UUID' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'The requested idea.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Missing or invalid bearer token.' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Idea not found.' }),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
@@ -95,6 +117,14 @@ __decorate([
 ], IdeasController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Update an idea',
+        description: 'Updates mutable fields of an idea (title, description, features, use case, status).',
+    }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Idea UUID' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Updated idea.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Missing or invalid bearer token.' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Idea not found.' }),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Param)('id')),
     __param(2, (0, common_1.Body)()),
@@ -104,6 +134,14 @@ __decorate([
 ], IdeasController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Delete an idea',
+        description: 'Permanently removes an idea and its scores/overrides.',
+    }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Idea UUID' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Idea deleted.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Missing or invalid bearer token.' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Idea not found.' }),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
@@ -112,6 +150,14 @@ __decorate([
 ], IdeasController.prototype, "remove", null);
 __decorate([
     (0, common_1.Post)(':id/rescore'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Re-score an idea',
+        description: 'Recomputes the score for an idea against the current CV profile.',
+    }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Idea UUID' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Idea with recomputed scores.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Missing or invalid bearer token.' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Idea not found.' }),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
@@ -120,6 +166,14 @@ __decorate([
 ], IdeasController.prototype, "rescore", null);
 __decorate([
     (0, common_1.Patch)(':id/rank'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Set ranking override',
+        description: 'Pins an idea to the top or forces it to a specific manual rank position.',
+    }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Idea UUID' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Ranking override applied.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Missing or invalid bearer token.' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Idea not found.' }),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Param)('id')),
     __param(2, (0, common_1.Body)()),
@@ -129,6 +183,14 @@ __decorate([
 ], IdeasController.prototype, "updateRank", null);
 __decorate([
     (0, common_1.Delete)(':id/rank'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Clear ranking override',
+        description: 'Removes any pin/manual-rank override so the idea falls back to computed scoring.',
+    }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Idea UUID' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Ranking override cleared.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Missing or invalid bearer token.' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Idea not found.' }),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
@@ -136,6 +198,8 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], IdeasController.prototype, "clearRank", null);
 exports.IdeasController = IdeasController = __decorate([
+    (0, swagger_1.ApiTags)('Ideas'),
+    (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Controller)('ideas'),
     __metadata("design:paramtypes", [ideas_service_1.IdeasService,

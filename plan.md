@@ -1,8 +1,8 @@
-# Idea Prioritizer — Implementation Plan
+# Idea Dump — Implementation Plan
 
 ## 0. Context
 
-Third project in the portfolio sequence: URL Shortener (done, Go/Gin + Casbin + Traefik) → **Idea Prioritizer** (this project, NestJS) → Video Streaming Platform (future, first project on Kubernetes). This plan reuses the deployment pattern proven on the URL shortener: Docker → GHCR → GitHub Actions → Traefik, secrets via Infisical, no Kubernetes.
+Third project in the portfolio sequence: URL Shortener (done, Go/Gin + Casbin + Traefik) → **Idea Dump** (this project, NestJS) → Video Streaming Platform (future, first project on Kubernetes). This plan reuses the deployment pattern proven on the URL shortener: Docker → GHCR → GitHub Actions → Traefik, secrets via Infisical, no Kubernetes.
 
 ## 1. Goals / Non-Goals
 

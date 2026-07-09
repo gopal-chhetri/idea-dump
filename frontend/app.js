@@ -1,11 +1,11 @@
 /**
- * Idea Prioritizer — Client Application
+ * Idea Dump — Client Application
  * Dual-mode: live API sync when backend is reachable, localStorage mock when offline.
  */
 
 // ── API Client ────────────────────────────────────────────────────────────────
 class ApiClient {
-  constructor(baseUrl = 'http://localhost:3000') {
+  constructor(baseUrl = window.location.origin) {
     this.baseUrl = baseUrl;
     this.tokenKey = 'ip_access_token';
     this.refreshKey = 'ip_refresh_token';
@@ -167,7 +167,7 @@ function escapeHtml(str) {
 // ── Application ───────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   const api = new ApiClient();
-  const db  = new MockDatabase();
+  const db = new MockDatabase();
 
   let state = {
     isAuthenticated: false,
@@ -179,21 +179,21 @@ document.addEventListener('DOMContentLoaded', () => {
   // DOM refs
   const $ = id => document.getElementById(id);
   const connectionBadge = $('connection-badge');
-  const authBtn         = $('auth-btn');
-  const authModal       = $('auth-modal');
-  const skillModal      = $('skill-modal');
-  const rankModal       = $('rank-modal');
-  const cvSummaryInput  = $('cv-summary');
-  const saveSummaryBtn  = $('save-summary-btn');
-  const skillsList      = $('skills-list');
-  const ideaForm        = $('idea-form');
-  const ideasStack      = $('ideas-stack');
+  const authBtn = $('auth-btn');
+  const authModal = $('auth-modal');
+  const skillModal = $('skill-modal');
+  const rankModal = $('rank-modal');
+  const cvSummaryInput = $('cv-summary');
+  const saveSummaryBtn = $('save-summary-btn');
+  const skillsList = $('skills-list');
+  const ideaForm = $('idea-form');
+  const ideasStack = $('ideas-stack');
   const addSkillTrigger = $('add-skill-trigger');
-  const quotaDisplay    = $('quota-display');
-  const rescoreAllBtn   = $('rescore-all-btn');
-  const skillForm       = $('skill-form');
-  const rankForm        = $('rank-form');
-  const authForm        = $('auth-form');
+  const quotaDisplay = $('quota-display');
+  const rescoreAllBtn = $('rescore-all-btn');
+  const skillForm = $('skill-form');
+  const rankForm = $('rank-form');
+  const authForm = $('auth-form');
 
   // ── OAuth token pickup from URL (redirect flow) ──────────────────────────
   (function consumeOAuthParams() {
@@ -223,7 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
           api.request('/ideas').catch(() => []),
         ]);
         state.profile = profile || { summaryText: '', skills: [] };
-        state.ideas   = Array.isArray(ideas) ? ideas : [];
+        state.ideas = Array.isArray(ideas) ? ideas : [];
       } catch (err) {
         console.error('Backend sync error:', err);
         loadMockState();
@@ -242,15 +242,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function loadMockState() {
     state.profile.summaryText = db.get('summary', '');
-    state.profile.skills      = db.get('skills', []);
-    state.ideas               = db.get('ideas', []);
-    state.quota.count         = db.get('quota_count', 0);
+    state.profile.skills = db.get('skills', []);
+    state.ideas = db.get('ideas', []);
+    state.quota.count = db.get('quota_count', 0);
   }
 
   function saveMockState() {
-    db.set('summary',     state.profile.summaryText);
-    db.set('skills',      state.profile.skills);
-    db.set('ideas',       state.ideas);
+    db.set('summary', state.profile.summaryText);
+    db.set('skills', state.profile.skills);
+    db.set('ideas', state.ideas);
     db.set('quota_count', state.quota.count);
   }
 
@@ -291,7 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <span class="skill-meta">${escapeHtml(skill.category)}</span>
         </div>
         <div class="skill-weight-dots" title="Relevance: ${skill.weight}/5">
-          ${[1,2,3,4,5].map(i => `<span class="dot ${i <= skill.weight ? 'active' : ''}"></span>`).join('')}
+          ${[1, 2, 3, 4, 5].map(i => `<span class="dot ${i <= skill.weight ? 'active' : ''}"></span>`).join('')}
         </div>
         <button class="btn-close delete-skill-btn" data-id="${escapeHtml(skill.id)}" title="Remove skill">×</button>
       </div>
@@ -328,11 +328,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     ideasStack.innerHTML = sorted.map(idea => {
-      const s        = idea.scores?.[0] || {};
-      const score    = s.finalScore ?? 0;
+      const s = idea.scores?.[0] || {};
+      const score = s.finalScore ?? 0;
       const features = idea.features || [];
       const isPinned = idea.rankOverride?.pinned;
-      const rank     = idea.rankOverride?.manualRank;
+      const rank = idea.rankOverride?.manualRank;
       const scorePct = Math.min(100, Math.max(0, score));
 
       return `
@@ -459,10 +459,10 @@ document.addEventListener('DOMContentLoaded', () => {
     submitBtn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> Scoring…';
     lucide.createIcons();
 
-    const title    = $('idea-title').value.trim();
-    const desc     = $('idea-desc').value.trim();
-    const useCase  = $('idea-usecase').value.trim();
-    const status   = $('idea-status').value;
+    const title = $('idea-title').value.trim();
+    const desc = $('idea-desc').value.trim();
+    const useCase = $('idea-usecase').value.trim();
+    const status = $('idea-status').value;
     const features = $('idea-features').value
       .split(',').map(s => s.trim()).filter(Boolean);
 
@@ -526,9 +526,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   skillForm.addEventListener('submit', async e => {
     e.preventDefault();
-    const name     = $('skill-name').value.trim();
+    const name = $('skill-name').value.trim();
     const category = $('skill-category').value;
-    const weight   = parseInt($('skill-weight').value, 10);
+    const weight = parseInt($('skill-weight').value, 10);
 
     if (api.isOnline && api.token) {
       try { await api.request('/cv-profile/skills', { method: 'POST', body: JSON.stringify({ name, category, weight }) }); }
@@ -544,9 +544,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   rankForm.addEventListener('submit', async e => {
     e.preventDefault();
-    const id       = $('rank-idea-id').value;
-    const pinned   = $('rank-pinned').checked;
-    const rawRank  = $('rank-manual').value;
+    const id = $('rank-idea-id').value;
+    const pinned = $('rank-pinned').checked;
+    const rawRank = $('rank-manual').value;
     const manualRank = rawRank ? parseInt(rawRank, 10) : undefined;
 
     if (api.isOnline && api.token) {
@@ -577,10 +577,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── Auth ─────────────────────────────────────────────────────────────────
   let authMode = 'login';
-  const tabLogin     = $('tab-login');
-  const tabRegister  = $('tab-register');
+  const tabLogin = $('tab-login');
+  const tabRegister = $('tab-register');
   const authSubmitBtn = $('auth-submit-btn');
-  const authTitle    = $('auth-modal-title');
+  const authTitle = $('auth-modal-title');
 
   tabLogin.addEventListener('click', () => {
     authMode = 'login';
@@ -607,7 +607,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   authForm.addEventListener('submit', async e => {
     e.preventDefault();
-    const email    = $('auth-email').value;
+    const email = $('auth-email').value;
     const password = $('auth-password').value;
     try {
       const path = authMode === 'login' ? '/auth/login' : '/auth/register';
@@ -649,9 +649,9 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   function openRankModal(id, pinned, rank) {
-    $('rank-idea-id').value  = id;
+    $('rank-idea-id').value = id;
     $('rank-pinned').checked = pinned;
-    $('rank-manual').value   = rank || '';
+    $('rank-manual').value = rank || '';
     openModal(rankModal);
   }
 

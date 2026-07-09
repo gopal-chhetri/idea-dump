@@ -1,26 +1,30 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsString,
-  IsArray,
-  IsOptional,
-  IsEnum,
-} from 'class-validator';
+import { IsString, IsArray, IsOptional, IsEnum } from 'class-validator';
 import { IdeaStatus } from '../../entities/enums';
 
 export class CreateIdeaDto {
-  @ApiProperty({ example: 'AI-powered Code Review Bot', description: 'Short, memorable idea title' })
+  @ApiProperty({
+    example: 'AI-powered Code Review Bot',
+    description: 'Short, memorable idea title',
+  })
   @IsString()
   title!: string;
 
   @ApiProperty({
-    example: 'A GitHub App that uses LLMs to perform contextual code review, flag bugs, and suggest improvements.',
+    example:
+      'A GitHub App that uses LLMs to perform contextual code review, flag bugs, and suggest improvements.',
     description: 'Full problem statement and value proposition',
   })
   @IsString()
   description!: string;
 
   @ApiPropertyOptional({
-    example: ['PR diff analysis', 'LLM integration', 'GitHub Actions', 'Rate limiting'],
+    example: [
+      'PR diff analysis',
+      'LLM integration',
+      'GitHub Actions',
+      'Rate limiting',
+    ],
     description: 'Key features or capabilities (comma-separated in UI)',
     type: [String],
   })
@@ -30,8 +34,10 @@ export class CreateIdeaDto {
   features?: string[];
 
   @ApiProperty({
-    example: 'Software teams wanting automated, AI-assisted code review without switching tools.',
-    description: 'Who benefits and how this demonstrates engineering capability',
+    example:
+      'Software teams wanting automated, AI-assisted code review without switching tools.',
+    description:
+      'Who benefits and how this demonstrates engineering capability',
   })
   @IsString()
   useCase!: string;
@@ -59,7 +65,11 @@ export class UpdateIdeaDto {
   @IsOptional()
   useCase?: string;
 
-  @ApiPropertyOptional({ enum: IdeaStatus, example: IdeaStatus.ACTIVE, description: 'Workflow status of the idea' })
+  @ApiPropertyOptional({
+    enum: IdeaStatus,
+    example: IdeaStatus.ACTIVE,
+    description: 'Workflow status of the idea',
+  })
   @IsEnum(IdeaStatus)
   @IsOptional()
   status?: IdeaStatus;
