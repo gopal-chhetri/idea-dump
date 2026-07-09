@@ -1,98 +1,117 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Idea-dump
+Idea Dump is a platform for sharing and storing ideas.
+Live hosted on [ideas.soylab.dpdns.org](https://ideas.soylab.dpdns.org/).
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## System Architecture
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+### 1. Deployment & CI/CD Pipeline
+```mermaid
+graph TD
+    Developer[Developer] -->|git push| GitHub[GitHub Repository]
 
-## Description
+    subgraph cicd ["CI/CD - GitHub Actions"]
+        GitHub --> CI["CI - Lint and Test"]
+        CI --> CD["CD - Build Docker Image"]
+        CD --> GHCR[Push to GHCR]
+        CD --> PrepVPS["Ensure VPS directory permissions"]
+        PrepVPS --> SCP["SCP deploy.sh, compose.yml, migrations"]
+        SCP --> DeploySSH["SSH - run deploy.sh"]
+    end
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
-
-```bash
-$ npm install
+    subgraph vps ["VPS Deployment"]
+        GHCR -->|docker pull| VPS[Production VPS]
+        DeploySSH --> VPS
+        Infisical[Infisical Cloud] -->|Fetch Secrets| VPS
+        VPS --> App[App Container]
+        VPS --> Redis[Redis Container]
+        VPS --> DB[Postgres Container]
+        VPS --> Migrate[Migrate Container]
+        Cloudflare[Cloudflare] -->|Proxy Traffic| VPS
+    end
 ```
 
-## Compile and run the project
+## Features
+
+- **Idea Management**: Create, edit, and delete ideas
+- **Health Check**: `/health` endpoint for monitoring
+
+## Tech Stack
+
+| Component | Technology |
+|-----------|------------|
+| Application | TypeScript, NestJS |
+| Database | PostgreSQL |
+| Cache | Redis |
+| CI/CD | GitHub Actions |
+| Registry | GitHub Container Registry (GHCR) |
+| DNS/SSL | Cloudflare |
+| Secrets | Infisical Cloud |
+| Deployment | Docker Compose on VPS |
+
+## Prerequisites
+
+- Node.js 22+ (or use Docker)
+- Docker and Docker Compose
+- PostgreSQL 15+ (or use Docker)
+- Redis 7+ (or use Docker)
+
+## Local Development
+
+### Quick Start
 
 ```bash
-# development
-$ npm run start
+# Clone the repository
+git clone https://github.com/gopal-chhetri/idea-dump.git
+cd idea-dump
 
-# watch mode
-$ npm run start:dev
+# Start all services (app, database, redis)
+npm run start:dev
 
-# production mode
-$ npm run start:prod
+# Or with Docker Compose directly
+cd deployments/local-dev
+docker compose up --build
 ```
 
-## Run tests
+The app will be available at `http://localhost:3000`.
 
-```bash
-# unit tests
-$ npm run test
 
-# e2e tests
-$ npm run test:e2e
+## Environment Variables
 
-# test coverage
-$ npm run test:cov
-```
+Copy `deployments/local-dev/.env.sample` to `deployments/local-dev/.env` and configure:
 
-## Deployment
+## API Documentation
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+Once running, visit:
+- **Swagger UI**: `http://localhost:3000/api/docs`
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Key Endpoints
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+| Method | Path | Description | Auth |
+|--------|------|-------------|------|
+| POST | `/api/auth/register` | Register new user | No |
+| POST | `/api/auth/login` | Login | No |
+| POST | `/api/ideas` | Create idea | Yes |
+| GET | `/api/ideas` | List user's ideas | Yes |
+| DELETE | `/api/ideas/:id` | Deactivate idea | Yes |
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### CI/CD Pipeline
 
-## Resources
+Push to `main` triggers:
+1. **CI**: Lint → Test → Build
+2. **CD**: Build Docker image → Push to GHCR → Ensure VPS permissions → SCP deploy files and root `migrations/` → SSH `deploy.sh` on VPS
 
-Check out a few resources that may come in handy when working with NestJS:
+### Image Versioning
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+| Trigger | Tag | Example |
+|---------|-----|---------|
+| Push to main | `main-<sha>` | `main-abc1234` |
+| Git tag | `v1.2.3` | `v1.2.3` |
 
-## Support
+## Roadmap & TODOs
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+- [ ] Add unit and integration test coverage for core redirection flows.
+- [ ] Grafana and Prometheus setup for monitoring.
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+MIT License
