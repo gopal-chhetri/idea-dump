@@ -2,3 +2,4 @@ onlyBuiltDependencies:
   - bcrypt
   - esbuild
   - unrs-resolver
+  - '@scarf/scarf'
