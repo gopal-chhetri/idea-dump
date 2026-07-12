@@ -1,4 +1,3 @@
-import { IdeaStatus } from '../../entities/enums';
 export declare class CreateIdeaDto {
     title: string;
     description: string;
@@ -10,5 +9,5 @@ export declare class UpdateIdeaDto {
     description?: string;
     features?: string[];
     useCase?: string;
-    status?: IdeaStatus;
+    status?: string;
 }

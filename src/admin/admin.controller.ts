@@ -57,7 +57,7 @@ export class AdminController {
   @ApiOperation({ summary: 'Create a user' })
   @ApiResponse({ status: 201, description: 'User created.' })
   async createUser(
-    @Body() body: { email: string; passwordHash?: string; role?: UserRole },
+    @Body() body: { email: string; passwordHash?: string; role?: string },
   ) {
     return this.adminService.createUser(body);
   }
@@ -77,7 +77,7 @@ export class AdminController {
   @ApiResponse({ status: 200, description: 'User updated.' })
   async updateUser(
     @Param('id') id: string,
-    @Body() body: { email?: string; role?: UserRole },
+    @Body() body: { email?: string; role?: string },
   ) {
     return this.adminService.updateUser(id, body);
   }

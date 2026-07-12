@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "=== VPS Setup: idea-prioritizer ==="
+echo "=== VPS Setup: idea_dump ==="
 
 # Install Docker if missing
 if ! command -v docker &>/dev/null; then
@@ -12,8 +12,8 @@ if ! command -v docker &>/dev/null; then
 fi
 
 # Create target directory
-sudo mkdir -p /opt/idea-prioritizer
-sudo chown "${USER}:${USER}" /opt/idea-prioritizer
+sudo mkdir -p /opt/app/idea_dump
+sudo chown "${USER}:${USER}" /opt/app/idea_dump
 
 # Create traefik network if missing
 docker network inspect traefik-network &>/dev/null || \

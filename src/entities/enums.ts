@@ -15,12 +15,6 @@ export enum SkillCategory {
   DOMAIN = 'domain',
 }
 
-export enum IdeaStatus {
-  INBOX = 'inbox',
-  ACTIVE = 'active',
-  ARCHIVED = 'archived',
-}
-
 export enum ScoringMethod {
   RULE_BASED = 'rule_based',
   LLM = 'llm',

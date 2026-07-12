@@ -1,7 +1,7 @@
 /**
- * Idea Dump — Client Application
- * Dual-mode: landing page when logged out, dashboard when authenticated.
- * Admin users are redirected to /admin/.
+ * Idea Dump — Unified Client Application
+ * Single SPA: landing when logged out, dashboard app-shell when authenticated.
+ * Admins see extra sidebar items (Users / Ideas / Settings).
  */
 
 // ── API Client ────────────────────────────────────────────────────────────────
@@ -87,15 +87,18 @@ function decodeToken(token) {
   }
 }
 
-// ── Offline Mock DB (localStorage) ───────────────────────────────────────────
-class MockDatabase {
-  constructor() { this.prefix = 'ip_mock_'; }
-  get(key, def = null) {
-    const v = localStorage.getItem(this.prefix + key);
-    return v ? JSON.parse(v) : def;
-  }
-  set(key, val) { localStorage.setItem(this.prefix + key, JSON.stringify(val)); }
+function statusValue(status) {
+  if (!status) return 'draft';
+  return typeof status === 'string' ? status : status.value;
 }
+
+const STATUS_ORDER = ['draft', 'in_progress', 'completed', 'archived'];
+const STATUS_LABELS = {
+  draft: 'Draft',
+  in_progress: 'In Progress',
+  completed: 'Completed',
+  archived: 'Archived',
+};
 
 // ── Local Scoring Engine (mirrors backend RuleBasedScoringStrategy) ───────────
 class LocalScoringEngine {
@@ -182,25 +185,32 @@ function showView(name) {
 // ── Application ───────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   const api = new ApiClient();
-  const db = new MockDatabase();
 
   let state = {
     isAuthenticated: false,
+    role: null,
+    email: null,
     profile: { summaryText: '', skills: [] },
     ideas: [],
     quota: { count: 0, limit: 2 },
+    currentPage: 'my-backlog',
+    admin: { usersPage: 1, ideasPage: 1 },
   };
 
-  // DOM refs
   const $ = id => document.getElementById(id);
   const authCheck = $('auth-check');
   const landingView = $('landing-view');
   const dashboardView = $('dashboard-view');
+  const sidebar = $('sidebar');
+  const sidebarOverlay = $('sidebar-overlay');
+  const mobileMenuToggle = $('mobile-menu-toggle');
+  const sidebarLogout = $('sidebar-logout');
   const connectionBadge = $('connection-badge');
   const authBtn = $('auth-btn');
   const authModal = $('auth-modal');
   const skillModal = $('skill-modal');
   const rankModal = $('rank-modal');
+  const adminUserModal = $('admin-user-modal');
   const cvSummaryInput = $('cv-summary');
   const saveSummaryBtn = $('save-summary-btn');
   const skillsList = $('skills-list');
@@ -220,6 +230,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function showDashboard() {
     showView('dashboard-view');
+    showPage('my-backlog');
+  }
+
+  // ── Page switching (sidebar nav) ──
+  function showPage(name) {
+    state.currentPage = name;
+    document.querySelectorAll('.page').forEach(p =>
+      p.classList.toggle('active', p.id === `page-${name}`));
+    document.querySelectorAll('.nav-item').forEach(t =>
+      t.classList.toggle('active', t.dataset.view === name));
+
+    if (name === 'admin-users') { loadAdminStats(); loadAdminUsers(); }
+    if (name === 'admin-ideas') { loadAdminStats(); loadAdminIdeas(); }
+    if (name === 'admin-settings') loadAdminSettings();
+  }
+
+  // ── Role gating ──
+  function applyRoleGating() {
+    const isAdmin = state.role === 'admin';
+    document.querySelectorAll('.admin-only').forEach(el => {
+      el.style.display = isAdmin ? '' : 'none';
+    });
+    if (!isAdmin && state.currentPage && $(`page-${state.currentPage}`)?.classList.contains('admin-only')) {
+      showPage('my-backlog');
+    }
+  }
+
+  function populateUserPill() {
+    const email = state.email || (state.role || 'user');
+    const name = email.split('@')[0];
+    $('sidebar-name').textContent = email;
+    $('sidebar-role').textContent = state.role || 'user';
+    $('sidebar-avatar').textContent = (name[0] || 'U').toUpperCase();
   }
 
   // ── OAuth token pickup from URL (redirect flow) ──────────────────────────
@@ -238,21 +281,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const token = api.token;
     if (token) {
       const payload = decodeToken(token);
-      if (payload) {
-        // Admin → redirect
-        if (payload.role === 'admin') {
-          window.location.href = '/admin/';
-          return;
-        }
-        // User → show dashboard
+      if (payload && payload.role) {
         state.isAuthenticated = true;
+        state.role = payload.role;
+        state.email = payload.email || null;
         authCheck.style.display = 'none';
+        populateUserPill();
         showDashboard();
+        applyRoleGating();
         await syncApp();
         return;
       }
     }
-    // No valid token → show landing
     authCheck.style.display = 'none';
     showLanding();
   }
@@ -265,8 +305,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (online && api.token) {
       state.isAuthenticated = true;
       authBtn.innerHTML = '<i data-lucide="log-out"></i> Log Out';
-      ideasStack.innerHTML = renderSkeletons(3);
-      lucide.createIcons();
+      if (state.currentPage === 'my-backlog') {
+        ideasStack.innerHTML = renderSkeletons(3);
+        lucide.createIcons();
+      }
       try {
         const [profile, ideas] = await Promise.all([
           api.request('/cv-profile').catch(() => null),
@@ -276,7 +318,6 @@ document.addEventListener('DOMContentLoaded', () => {
         state.ideas = Array.isArray(ideas) ? ideas : [];
       } catch (err) {
         console.error('Backend sync error:', err);
-        loadMockState();
         showToast('Sync failed — showing local data', 'warning');
       }
     } else {
@@ -284,36 +325,15 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!api.token) {
         authBtn.innerHTML = '<i data-lucide="key-round"></i> Authenticate';
       }
-      loadMockState();
     }
 
     renderUi();
   }
 
-  function loadMockState() {
-    state.profile.summaryText = db.get('summary', '');
-    state.profile.skills = db.get('skills', []);
-    state.ideas = db.get('ideas', []);
-    state.quota.count = db.get('quota_count', 0);
-  }
-
-  function saveMockState() {
-    db.set('summary', state.profile.summaryText);
-    db.set('skills', state.profile.skills);
-    db.set('ideas', state.ideas);
-    db.set('quota_count', state.quota.count);
-  }
-
   function updateConnectionBadge(online) {
-    if (online) {
-      connectionBadge.className = 'badge badge-online';
-      connectionBadge.querySelector('.label').textContent = 'Engine Connected';
-      rescoreAllBtn.style.display = 'inline-flex';
-    } else {
-      connectionBadge.className = 'badge badge-offline';
-      connectionBadge.querySelector('.label').textContent = 'Mock Mode (Local)';
-      rescoreAllBtn.style.display = 'none';
-    }
+    connectionBadge.className = `badge ${online ? 'badge-online' : 'badge-offline'}`;
+    connectionBadge.querySelector('.label').textContent = online ? 'Engine Connected' : 'Mock Mode (Local)';
+    rescoreAllBtn.style.display = online ? 'inline-flex' : 'none';
   }
 
   // ── Render ───────────────────────────────────────────────────────────────
@@ -377,71 +397,26 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    ideasStack.innerHTML = sorted.map(idea => {
-      const s = idea.scores?.[0] || {};
-      const score = s.finalScore ?? 0;
-      const features = idea.features || [];
-      const isPinned = idea.rankOverride?.pinned;
-      const rank = idea.rankOverride?.manualRank;
-      const scorePct = Math.min(100, Math.max(0, score));
+    // Group by status
+    const groups = {};
+    for (const s of STATUS_ORDER) groups[s] = [];
+    for (const idea of sorted) {
+      const sv = statusValue(idea.status);
+      (groups[sv] || (groups[sv] = [])).push(idea);
+    }
 
+    ideasStack.innerHTML = STATUS_ORDER.map(sv => {
+      const list = groups[sv] || [];
+      const cards = list.length ? list.map(renderIdeaCard).join('') : `
+        <div class="group-empty">No ideas in ${STATUS_LABELS[sv]}.</div>`;
       return `
-      <article class="card idea-card ${isPinned ? 'pinned' : ''}" data-id="${escapeHtml(idea.id)}">
-        <div class="card-body">
-          <div class="idea-card-header">
-            <div class="idea-title-block">
-              <h3>${escapeHtml(idea.title)}</h3>
-              <div class="idea-badges">
-                <span class="badge badge-status">${escapeHtml(idea.status)}</span>
-                ${isPinned ? `<span class="badge badge-pinned"><i data-lucide="pin" style="width:10px;height:10px;"></i> Pinned</span>` : ''}
-                ${rank ? `<span class="badge badge-pinned">Force #${rank}</span>` : ''}
-              </div>
-            </div>
-            <div class="score-badge-circle" title="Fit×0.5 + (100−Effort)×0.3 + Novelty×0.2">
-              <span class="score-value">${score}</span>
-              <span class="score-lbl">Score</span>
-            </div>
+        <div class="status-group">
+          <div class="status-group-head">
+            <span class="badge badge-status status-${sv}">${STATUS_LABELS[sv]}</span>
+            <span class="status-count">${list.length}</span>
           </div>
-
-          <p class="idea-desc-text">${escapeHtml(idea.description)}</p>
-
-          ${features.length ? `
-          <div class="features-list">
-            ${features.map(f => `<span class="feature-tag">${escapeHtml(f)}</span>`).join('')}
-          </div>` : ''}
-
-          <div class="idea-metrics-bar">
-            <div class="metric-item">
-              <span class="metric-label">CV Fit — ${s.fitScore ?? 0}%</span>
-              <div class="metric-bar-bg"><div class="metric-bar-fill" style="width:${s.fitScore ?? 0}%"></div></div>
-            </div>
-            <div class="metric-item">
-              <span class="metric-label">Ease — ${100 - (s.effortScore ?? 0)}%</span>
-              <div class="metric-bar-bg"><div class="metric-bar-fill" style="width:${100 - (s.effortScore ?? 0)}%"></div></div>
-            </div>
-            <div class="metric-item">
-              <span class="metric-label">Novelty — ${s.noveltyScore ?? 0}%</span>
-              <div class="metric-bar-bg"><div class="metric-bar-fill" style="width:${s.noveltyScore ?? 0}%"></div></div>
-            </div>
-          </div>
-
-          <div class="idea-actions">
-            <button class="btn btn-secondary btn-sm rank-idea-btn"
-              data-id="${escapeHtml(idea.id)}"
-              data-pinned="${isPinned ? 'true' : 'false'}"
-              data-rank="${rank ?? ''}">
-              <i data-lucide="sliders"></i> Force Order
-            </button>
-            ${api.isOnline ? `
-            <button class="btn btn-secondary btn-sm rescore-idea-btn" data-id="${escapeHtml(idea.id)}">
-              <i data-lucide="rotate-cw"></i> Rescore
-            </button>` : ''}
-            <button class="btn btn-danger btn-sm delete-idea-btn" data-id="${escapeHtml(idea.id)}">
-              <i data-lucide="trash-2"></i>
-            </button>
-          </div>
-        </div>
-      </article>`;
+          <div class="stack-layout">${cards}</div>
+        </div>`;
     }).join('');
 
     ideasStack.querySelectorAll('.delete-idea-btn').forEach(btn =>
@@ -453,6 +428,78 @@ document.addEventListener('DOMContentLoaded', () => {
         const b = e.currentTarget;
         openRankModal(b.dataset.id, b.dataset.pinned === 'true', b.dataset.rank);
       }));
+    ideasStack.querySelectorAll('.status-change-select').forEach(sel =>
+      sel.addEventListener('change', e =>
+        changeIdeaStatus(e.currentTarget.dataset.id, e.currentTarget.value)));
+  }
+
+  function renderIdeaCard(idea) {
+    const s = idea.scores?.[0] || {};
+    const score = s.finalScore ?? 0;
+    const features = idea.features || [];
+    const isPinned = idea.rankOverride?.pinned;
+    const rank = idea.rankOverride?.manualRank;
+
+    return `
+    <article class="card idea-card ${isPinned ? 'pinned' : ''}" data-id="${escapeHtml(idea.id)}">
+      <div class="card-body">
+        <div class="idea-card-header">
+          <div class="idea-title-block">
+            <h3>${escapeHtml(idea.title)}</h3>
+            <div class="idea-badges">
+              <span class="badge badge-status">${escapeHtml(STATUS_LABELS[statusValue(idea.status)] || statusValue(idea.status))}</span>
+              ${isPinned ? `<span class="badge badge-pinned"><i data-lucide="pin" style="width:10px;height:10px;"></i> Pinned</span>` : ''}
+              ${rank ? `<span class="badge badge-pinned">Force #${rank}</span>` : ''}
+            </div>
+          </div>
+          <div class="score-badge-circle" title="Fit×0.5 + (100−Effort)×0.3 + Novelty×0.2">
+            <span class="score-value">${score}</span>
+            <span class="score-lbl">Score</span>
+          </div>
+        </div>
+
+        <p class="idea-desc-text">${escapeHtml(idea.description)}</p>
+
+        ${features.length ? `
+        <div class="features-list">
+          ${features.map(f => `<span class="feature-tag">${escapeHtml(f)}</span>`).join('')}
+        </div>` : ''}
+
+        <div class="idea-metrics-bar">
+          <div class="metric-item">
+            <span class="metric-label">CV Fit — ${s.fitScore ?? 0}%</span>
+            <div class="metric-bar-bg"><div class="metric-bar-fill" style="width:${s.fitScore ?? 0}%"></div></div>
+          </div>
+          <div class="metric-item">
+            <span class="metric-label">Ease — ${100 - (s.effortScore ?? 0)}%</span>
+            <div class="metric-bar-bg"><div class="metric-bar-fill" style="width:${100 - (s.effortScore ?? 0)}%"></div></div>
+          </div>
+          <div class="metric-item">
+            <span class="metric-label">Novelty — ${s.noveltyScore ?? 0}%</span>
+            <div class="metric-bar-bg"><div class="metric-bar-fill" style="width:${s.noveltyScore ?? 0}%"></div></div>
+          </div>
+        </div>
+
+        <div class="idea-actions">
+          <select class="status-change-select" data-id="${escapeHtml(idea.id)}">
+            ${STATUS_ORDER.map(sv => `<option value="${sv}" ${sv === statusValue(idea.status) ? 'selected' : ''}>${STATUS_LABELS[sv]}</option>`).join('')}
+          </select>
+          <button class="btn btn-secondary btn-sm rank-idea-btn"
+            data-id="${escapeHtml(idea.id)}"
+            data-pinned="${isPinned ? 'true' : 'false'}"
+            data-rank="${rank ?? ''}">
+            <i data-lucide="sliders"></i> Force Order
+          </button>
+          ${api.isOnline ? `
+          <button class="btn btn-secondary btn-sm rescore-idea-btn" data-id="${escapeHtml(idea.id)}">
+            <i data-lucide="rotate-cw"></i> Rescore
+          </button>` : ''}
+          <button class="btn btn-danger btn-sm delete-idea-btn" data-id="${escapeHtml(idea.id)}">
+            <i data-lucide="trash-2"></i>
+          </button>
+        </div>
+      </div>
+    </article>`;
   }
 
   // ── Operations ───────────────────────────────────────────────────────────
@@ -460,9 +507,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (api.isOnline && api.token) {
       try { await api.request(`/cv-profile/skills/${id}`, { method: 'DELETE' }); }
       catch (err) { showToast(err.message, 'error'); return; }
-    } else {
-      state.profile.skills = state.profile.skills.filter(s => s.id !== id);
-      saveMockState();
     }
     await syncApp();
   }
@@ -472,9 +516,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (api.isOnline && api.token) {
       try { await api.request(`/ideas/${id}`, { method: 'DELETE' }); }
       catch (err) { showToast(err.message, 'error'); return; }
-    } else {
-      state.ideas = state.ideas.filter(i => i.id !== id);
-      saveMockState();
     }
     await syncApp();
   }
@@ -487,15 +528,20 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (err) { showToast(err.message, 'error'); }
   }
 
+  async function changeIdeaStatus(id, status) {
+    try {
+      await api.request(`/ideas/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) });
+      await syncApp();
+      showToast(`Status set to ${STATUS_LABELS[status] || status}`, 'success');
+    } catch (err) { showToast(err.message, 'error'); }
+  }
+
   // ── Form Handlers ────────────────────────────────────────────────────────
   saveSummaryBtn.addEventListener('click', async () => {
     const text = cvSummaryInput.value;
     if (api.isOnline && api.token) {
       try { await api.request('/cv-profile', { method: 'PUT', body: JSON.stringify({ summaryText: text }) }); }
       catch (err) { showToast(err.message, 'error'); return; }
-    } else {
-      state.profile.summaryText = text;
-      saveMockState();
     }
     showToast('Profile summary saved', 'success');
     await syncApp();
@@ -521,21 +567,6 @@ document.addEventListener('DOMContentLoaded', () => {
           method: 'POST',
           body: JSON.stringify({ title, description: desc, useCase, status, features }),
         });
-      } else {
-        if (state.quota.count >= state.quota.limit) {
-          showToast('Daily quota (2/day) reached in mock mode', 'warning');
-          return;
-        }
-        const newIdea = {
-          id: Date.now().toString(36),
-          title, description: desc, useCase, status, features,
-          createdAt: new Date().toISOString(),
-        };
-        const allWithNew = [...state.ideas, newIdea];
-        newIdea.scores = [{ ...LocalScoringEngine.scoreIdea(newIdea, state.profile.skills, allWithNew), scoringMethod: 'rule_based' }];
-        state.ideas.push(newIdea);
-        state.quota.count++;
-        saveMockState();
       }
       ideaForm.reset();
       showToast('Idea captured and scored!', 'success');
@@ -551,15 +582,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   rescoreAllBtn.addEventListener('click', async () => {
-    if (!api.isOnline) {
-      state.ideas.forEach(idea => {
-        idea.scores = [{ ...LocalScoringEngine.scoreIdea(idea, state.profile.skills, state.ideas), scoringMethod: 'rule_based' }];
-      });
-      saveMockState();
-      renderUi();
-      showToast('All ideas rescored locally', 'success');
-      return;
-    }
     rescoreAllBtn.disabled = true;
     try {
       await Promise.all(state.ideas.map(i => api.request(`/ideas/${i.id}/rescore`, { method: 'POST' })));
@@ -581,9 +603,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (api.isOnline && api.token) {
       try { await api.request('/cv-profile/skills', { method: 'POST', body: JSON.stringify({ name, category, weight }) }); }
       catch (err) { showToast(err.message, 'error'); return; }
-    } else {
-      state.profile.skills.push({ id: Date.now().toString(36), name, category, weight });
-      saveMockState();
     }
     closeModals();
     showToast(`"${name}" added to profile`, 'success');
@@ -600,9 +619,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (api.isOnline && api.token) {
       try { await api.request(`/ideas/${id}/rank`, { method: 'PATCH', body: JSON.stringify({ pinned, manualRank }) }); }
       catch (err) { showToast(err.message, 'error'); return; }
-    } else {
-      const idea = state.ideas.find(i => i.id === id);
-      if (idea) { idea.rankOverride = { pinned, manualRank }; saveMockState(); }
     }
     closeModals();
     showToast('Ordering override applied', 'success');
@@ -614,9 +630,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (api.isOnline && api.token) {
       try { await api.request(`/ideas/${id}/rank`, { method: 'DELETE' }); }
       catch (err) { showToast(err.message, 'error'); return; }
-    } else {
-      const idea = state.ideas.find(i => i.id === id);
-      if (idea) { delete idea.rankOverride; saveMockState(); }
     }
     closeModals();
     showToast('Rank override cleared', 'success');
@@ -647,6 +660,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (state.isAuthenticated) {
       api.clearTokens();
       state.isAuthenticated = false;
+      state.role = null;
+      state.email = null;
       showToast('Signed out', 'success');
       showLanding();
     } else {
@@ -660,6 +675,11 @@ document.addEventListener('DOMContentLoaded', () => {
   $('landing-footer-cta').addEventListener('click', () => openModal(authModal));
 
   authBtn.addEventListener('click', handleAuthClick);
+  sidebarLogout.addEventListener('click', () => {
+    sidebar.classList.remove('open');
+    sidebarOverlay.classList.remove('active');
+    handleAuthClick();
+  });
 
   authForm.addEventListener('submit', async e => {
     e.preventDefault();
@@ -673,18 +693,17 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       api.setTokens(data.accessToken, data.refreshToken);
 
-      // Check role
       const payload = decodeToken(data.accessToken);
-      if (payload?.role === 'admin') {
-        window.location.href = '/admin/';
-        return;
-      }
+      state.isAuthenticated = true;
+      state.role = payload?.role || 'user';
+      state.email = payload?.email || email;
 
       closeModals();
       authBtn.innerHTML = '<i data-lucide="log-out"></i> Log Out';
+      populateUserPill();
       showToast('Authenticated successfully', 'success');
-      state.isAuthenticated = true;
       showDashboard();
+      applyRoleGating();
       await syncApp();
     } catch (err) {
       showToast(err.message, 'error');
@@ -698,6 +717,197 @@ document.addEventListener('DOMContentLoaded', () => {
   $('github-auth-btn').addEventListener('click', () => {
     window.location.href = `${api.baseUrl}/auth/github`;
   });
+
+  // ── Sidebar nav + mobile drawer ─────────────────────────────────────────
+  document.querySelectorAll('.nav-item').forEach(tab =>
+    tab.addEventListener('click', e => {
+      e.preventDefault();
+      showPage(tab.dataset.view);
+      sidebar.classList.remove('open');
+      sidebarOverlay.classList.remove('active');
+    }));
+
+  mobileMenuToggle.addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+    sidebarOverlay.classList.toggle('active');
+  });
+  sidebarOverlay.addEventListener('click', () => {
+    sidebar.classList.remove('open');
+    sidebarOverlay.classList.remove('active');
+  });
+
+  // ── Admin: Stats ──
+  async function loadAdminStats() {
+    try {
+      const stats = await api.request('/admin/stats');
+      if ($('stat-users')) $('stat-users').textContent = stats.userCount;
+      if ($('stat-admins')) $('stat-admins').textContent = stats.adminCount;
+      if ($('stat-ideas')) $('stat-ideas').textContent = stats.ideaCount;
+    } catch (err) {
+      if (isUnauthorized(err)) handleAuthClick();
+    }
+  }
+
+  // ── Admin: Users ──
+  async function loadAdminUsers() {
+    const tbody = $('admin-users-tbody');
+    try {
+      const data = await api.request(`/admin/users?page=${state.admin.usersPage}&limit=20`);
+      tbody.innerHTML = data.users.map(u => `
+        <tr>
+          <td>${escapeHtml(u.email)}</td>
+          <td class="hide-mobile">${new Date(u.createdAt).toLocaleDateString()}</td>
+          <td><span class="pill ${u.role === 'admin' ? 'pill-admin' : 'pill-user'}">${escapeHtml(u.role)}</span></td>
+          <td class="row-actions">
+            <button class="btn btn-sm btn-secondary" onclick="window.__app.toggleRole('${u.id}','${u.role}')">
+              ${u.role === 'admin' ? 'Demote' : 'Promote'}
+            </button>
+            <button class="btn btn-sm btn-danger" onclick="window.__app.deleteUser('${u.id}')">Delete</button>
+          </td>
+        </tr>
+      `).join('');
+      $('admin-users-page').textContent = `Page ${data.page} of ${Math.ceil(data.total / data.limit)}`;
+      $('admin-users-prev').disabled = data.page <= 1;
+      $('admin-users-next').disabled = data.page * data.limit >= data.total;
+    } catch (err) {
+      if (isUnauthorized(err)) handleAuthClick();
+      else tbody.innerHTML = `<tr><td colspan="4" style="color:var(--danger-color)">${escapeHtml(err.message)}</td></tr>`;
+    }
+  }
+
+  async function toggleRole(userId, currentRole) {
+    const newRole = currentRole === 'admin' ? 'user' : 'admin';
+    try {
+      await api.request(`/admin/users/${userId}`, { method: 'PATCH', body: JSON.stringify({ role: newRole }) });
+      loadAdminUsers();
+    } catch (err) { showToast(err.message, 'error'); }
+  }
+
+  async function deleteUser(userId) {
+    if (!confirm('Delete this user? This cannot be undone.')) return;
+    try {
+      await api.request(`/admin/users/${userId}`, { method: 'DELETE' });
+      loadAdminUsers();
+    } catch (err) { showToast(err.message, 'error'); }
+  }
+
+  $('admin-users-prev').addEventListener('click', () => { state.admin.usersPage = Math.max(1, state.admin.usersPage - 1); loadAdminUsers(); });
+  $('admin-users-next').addEventListener('click', () => { state.admin.usersPage++; loadAdminUsers(); });
+
+  // ── Admin: Create User ──
+  $('admin-create-user-btn').addEventListener('click', () => {
+    adminUserModal.classList.add('active');
+    $('admin-user-error').textContent = '';
+    lucide.createIcons();
+  });
+  $('admin-user-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const email = $('admin-user-email').value;
+    const password = $('admin-user-password').value;
+    const role = $('admin-user-role').value;
+    try {
+      await api.request('/admin/users', { method: 'POST', body: JSON.stringify({ email, passwordHash: password || undefined, role }) });
+      adminUserModal.classList.remove('active');
+      $('admin-user-form').reset();
+      loadAdminUsers();
+    } catch (err) {
+      $('admin-user-error').textContent = err.message;
+    }
+  });
+
+  // ── Admin: Ideas ──
+  async function loadAdminIdeas() {
+    const tbody = $('admin-ideas-tbody');
+    try {
+      const data = await api.request(`/admin/ideas?page=${state.admin.ideasPage}&limit=20`);
+      tbody.innerHTML = data.ideas.map(idea => {
+        const scores = idea.scores && idea.scores.length ? idea.scores : [];
+        const scoreVal = scores.length ? Math.round(scores[0].finalScore) : '—';
+        const userEmail = idea.user ? idea.user.email : '—';
+        return `
+          <tr>
+            <td>${escapeHtml(idea.title)}</td>
+            <td class="hide-mobile">${escapeHtml(userEmail)}</td>
+            <td>${scoreVal}</td>
+            <td><span class="pill">${escapeHtml(statusValue(idea.status))}</span></td>
+            <td class="hide-mobile">${new Date(idea.createdAt).toLocaleDateString()}</td>
+            <td class="row-actions">
+              <button class="btn btn-sm btn-secondary" onclick="window.__app.rescoreAdminIdea('${idea.id}')">Rescore</button>
+              <button class="btn btn-sm btn-danger" onclick="window.__app.deleteAdminIdea('${idea.id}')">Delete</button>
+            </td>
+          </tr>`;
+      }).join('');
+      $('admin-ideas-page').textContent = `Page ${data.page} of ${Math.ceil(data.total / data.limit)}`;
+      $('admin-ideas-prev').disabled = data.page <= 1;
+      $('admin-ideas-next').disabled = data.page * data.limit >= data.total;
+    } catch (err) {
+      if (isUnauthorized(err)) handleAuthClick();
+      else tbody.innerHTML = `<tr><td colspan="6" style="color:var(--danger-color)">${escapeHtml(err.message)}</td></tr>`;
+    }
+  }
+
+  async function rescoreAdminIdea(ideaId) {
+    try { await api.request(`/admin/ideas/${ideaId}/rescore`, { method: 'POST' }); loadAdminIdeas(); }
+    catch (err) { showToast(err.message, 'error'); }
+  }
+  async function deleteAdminIdea(ideaId) {
+    if (!confirm('Delete this idea?')) return;
+    try { await api.request(`/admin/ideas/${ideaId}`, { method: 'DELETE' }); loadAdminIdeas(); }
+    catch (err) { showToast(err.message, 'error'); }
+  }
+  $('admin-ideas-prev').addEventListener('click', () => { state.admin.ideasPage = Math.max(1, state.admin.ideasPage - 1); loadAdminIdeas(); });
+  $('admin-ideas-next').addEventListener('click', () => { state.admin.ideasPage++; loadAdminIdeas(); });
+  $('admin-rescore-all-btn').addEventListener('click', async () => {
+    if (!confirm('Rescore all ideas? This may take a moment.')) return;
+    try {
+      const result = await api.request('/admin/rescore/all', { method: 'POST' });
+      loadAdminIdeas();
+      showToast(`Rescored ${result.rescored} ideas.`, 'success');
+    } catch (err) { showToast(err.message, 'error'); }
+  });
+
+  // ── Admin: Settings ──
+  async function loadAdminSettings() {
+    const list = $('admin-settings-list');
+    try {
+      const settings = await api.request('/admin/settings');
+      if (!settings.length) {
+        list.innerHTML = '<p style="color:var(--text-secondary)">No settings configured yet.</p>';
+        return;
+      }
+      list.innerHTML = '<table class="data"><thead><tr><th>Key</th><th>Value</th><th>Updated</th></tr></thead><tbody>' +
+        settings.map(s => `
+          <tr>
+            <td><code>${escapeHtml(s.key)}</code></td>
+            <td><code>${escapeHtml(maskValue(s.value))}</code></td>
+            <td>${new Date(s.updatedAt).toLocaleDateString()}</td>
+          </tr>
+        `).join('') + '</tbody></table>';
+    } catch (err) {
+      if (isUnauthorized(err)) handleAuthClick();
+      else list.innerHTML = `<p style="color:var(--danger-color)">${escapeHtml(err.message)}</p>`;
+    }
+  }
+  function maskValue(val) {
+    if (!val || val.length < 8) return val || '';
+    return val.slice(0, 4) + '••••' + val.slice(-4);
+  }
+  $('admin-settings-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const key = $('admin-setting-key').value.trim();
+    const value = $('admin-setting-value').value.trim();
+    if (!key || !value) return;
+    try {
+      await api.request('/admin/settings', { method: 'PUT', body: JSON.stringify({ key, value }) });
+      $('admin-setting-key').value = '';
+      $('admin-setting-value').value = '';
+      loadAdminSettings();
+    } catch (err) { showToast(err.message, 'error'); }
+  });
+
+  function isUnauthorized(err) {
+    return err.message && (err.message.includes('401') || err.message.includes('Unauthorized'));
+  }
 
   // ── Modals ───────────────────────────────────────────────────────────────
   function openModal(modal) { modal.classList.add('active'); }
@@ -743,6 +953,9 @@ document.addEventListener('DOMContentLoaded', () => {
       toast.addEventListener('transitionend', () => toast.remove(), { once: true });
     }, 3500);
   }
+
+  // Expose admin handlers used by inline onclick attributes
+  window.__app = { toggleRole, deleteUser, rescoreAdminIdea, deleteAdminIdea };
 
   // ── Start ──
   bootstrap();

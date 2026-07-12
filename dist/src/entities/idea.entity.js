@@ -14,7 +14,7 @@ const core_1 = require("@mikro-orm/core");
 const legacy_1 = require("@mikro-orm/decorators/legacy");
 const uuid_1 = require("uuid");
 const user_entity_1 = require("./user.entity");
-const enums_1 = require("./enums");
+const idea_status_entity_1 = require("./idea-status.entity");
 const idea_score_entity_1 = require("./idea-score.entity");
 const idea_rank_override_entity_1 = require("./idea-rank-override.entity");
 let Idea = class Idea {
@@ -25,7 +25,7 @@ let Idea = class Idea {
     description;
     features = [];
     useCase;
-    status = enums_1.IdeaStatus.INBOX;
+    status;
     createdAt = new Date();
     scores = new core_1.Collection(this);
     rankOverride;
@@ -56,8 +56,8 @@ __decorate([
     __metadata("design:type", String)
 ], Idea.prototype, "useCase", void 0);
 __decorate([
-    (0, legacy_1.Enum)({ items: () => enums_1.IdeaStatus }),
-    __metadata("design:type", String)
+    (0, legacy_1.ManyToOne)(() => idea_status_entity_1.IdeaStatus),
+    __metadata("design:type", idea_status_entity_1.IdeaStatus)
 ], Idea.prototype, "status", void 0);
 __decorate([
     (0, legacy_1.Property)({ type: 'datetime' }),

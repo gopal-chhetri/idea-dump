@@ -3,11 +3,11 @@ set -euo pipefail
 
 TAG="${1:-latest}"
 REGISTRY_OWNER="${REGISTRY_OWNER:-gopal-chhetri}"
-IMAGE="ghcr.io/${REGISTRY_OWNER}/idea-prioritizer:${TAG}"
+IMAGE="ghcr.io/${REGISTRY_OWNER}/idea_dump:${TAG}"
 COMPOSE_DIR="$(cd "$(dirname "$0")" && pwd)"
-TARGET_DIR="/opt/idea-prioritizer"
+TARGET_DIR="/opt/idea_dump"
 
-echo "=== Deploying idea-prioritizer:${TAG} ==="
+echo "=== Deploying idea_dump:${TAG} ==="
 
 mkdir -p "${TARGET_DIR}"
 cp "${COMPOSE_DIR}/compose.yml" "${TARGET_DIR}/compose.yml"

@@ -3,6 +3,7 @@ import {
   Entity,
   PrimaryKey,
   Property,
+  ManyToOne,
   OneToMany,
   OneToOne,
 } from '@mikro-orm/decorators/legacy';
@@ -11,7 +12,7 @@ import { OAuthAccount } from './oauth-account.entity';
 import { RefreshToken } from './refresh-token.entity';
 import { CvProfile } from './cv-profile.entity';
 import { Idea } from './idea.entity';
-import { UserRole } from './enums';
+import { Role } from './role.entity';
 
 @Entity({ tableName: 'users' })
 export class User {
@@ -19,7 +20,6 @@ export class User {
     | 'id'
     | 'createdAt'
     | 'passwordHash'
-    | 'role'
     | 'oauthAccounts'
     | 'refreshTokens'
     | 'cvProfile'
@@ -33,8 +33,8 @@ export class User {
   @Property({ nullable: true, type: 'string' })
   passwordHash?: string;
 
-  @Property({ type: 'text', default: UserRole.USER })
-  role: UserRole = UserRole.USER;
+  @ManyToOne(() => Role)
+  role!: Role;
 
   @Property({ type: 'datetime' })
   createdAt: Date = new Date();

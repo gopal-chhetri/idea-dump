@@ -5,6 +5,8 @@ export * from './refresh-token.entity';
 export * from './cv-profile.entity';
 export * from './cv-skill.entity';
 export * from './idea.entity';
+export * from './role.entity';
+export * from './idea-status.entity';
 export * from './idea-score.entity';
 export * from './idea-rank-override.entity';
 export * from './daily-idea-quota.entity';

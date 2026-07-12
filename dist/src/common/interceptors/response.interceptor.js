@@ -11,7 +11,8 @@ const common_1 = require("@nestjs/common");
 const rxjs_1 = require("rxjs");
 let ResponseInterceptor = class ResponseInterceptor {
     intercept(context, next) {
-        const statusCode = context.switchToHttp().getResponse().statusCode;
+        const response = context.switchToHttp().getResponse();
+        const statusCode = response.statusCode;
         return next.handle().pipe((0, rxjs_1.map)((data) => ({
             data,
             statusCode,

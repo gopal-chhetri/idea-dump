@@ -1,5 +1,4 @@
 import { AdminService } from './admin.service';
-import { UserRole } from '../entities/enums';
 export declare class AdminController {
     private readonly adminService;
     constructor(adminService: AdminService);
@@ -9,7 +8,12 @@ export declare class AdminController {
         ideaCount: number;
     }>;
     listUsers(page?: number, limit?: number): Promise<{
-        users: import("@mikro-orm/core", { with: { "resolution-mode": "import" } }).Loaded<import("../entities").User, never, never, never>[];
+        users: {
+            id: string;
+            email: string;
+            role: string;
+            createdAt: Date;
+        }[];
         total: number;
         page: number;
         limit: number;
@@ -17,18 +21,49 @@ export declare class AdminController {
     createUser(body: {
         email: string;
         passwordHash?: string;
-        role?: UserRole;
-    }): Promise<import("../entities").User>;
-    getUser(id: string): Promise<import("@mikro-orm/core", { with: { "resolution-mode": "import" } }).Loaded<import("../entities").User, never, never, never>>;
+        role?: string;
+    }): Promise<{
+        id: string;
+        email: string;
+        role: string;
+        createdAt: Date;
+    }>;
+    getUser(id: string): Promise<{
+        id: string;
+        email: string;
+        role: string;
+        createdAt: Date;
+    }>;
     updateUser(id: string, body: {
         email?: string;
-        role?: UserRole;
-    }): Promise<import("@mikro-orm/core", { with: { "resolution-mode": "import" } }).Loaded<import("../entities").User, never, never, never>>;
+        role?: string;
+    }): Promise<{
+        id: string;
+        email: string;
+        role: string;
+        createdAt: Date;
+    }>;
     deleteUser(id: string): Promise<{
         deleted: boolean;
     }>;
     listIdeas(page?: number, limit?: number): Promise<{
-        ideas: import("@mikro-orm/core", { with: { "resolution-mode": "import" } }).Loaded<import("../entities").Idea, "user" | "scores" | "rankOverride", never, never>[];
+        ideas: {
+            id: string;
+            title: string;
+            status: string;
+            user: {
+                id: string;
+                email: string;
+            } | null;
+            scores: {
+                finalScore: number;
+                fitScore: number;
+                effortScore: number;
+                noveltyScore: number;
+                scoringMethod: import("../entities/enums").ScoringMethod;
+            }[];
+            createdAt: Date;
+        }[];
         total: number;
         page: number;
         limit: number;

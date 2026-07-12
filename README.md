@@ -77,7 +77,7 @@ The app will be available at `http://localhost:3000`.
 
 ## Environment Variables
 
-Copy `deployments/local-dev/.env.sample` to `deployments/local-dev/.env` and configure:
+Copy `deployments/local-dev/.env.example` to `deployments/local-dev/.env` and configure:
 
 ## API Documentation
 

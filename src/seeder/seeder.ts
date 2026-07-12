@@ -1,17 +1,37 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../app.module';
+import { EntityManager } from '@mikro-orm/postgresql';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
 import { CvProfileService } from '../cv-profile/cv-profile.service';
 import { IdeasService } from '../ideas/ideas.service';
 import { ScoringService } from '../scoring/scoring.service';
-import { SkillCategory, UserRole } from '../entities/enums';
+import { SkillCategory } from '../entities/enums';
+import { Role } from '../entities/role.entity';
+import { IdeaStatus } from '../entities/idea-status.entity';
 
 const DEMO_EMAIL = 'user@gmail.com';
 const DEMO_PASSWORD = 'password123';
 const ADMIN_EMAIL = 'admin@gmail.com';
 const ADMIN_PASSWORD = 'password123';
 const SALT_ROUNDS = 12;
+
+const ROLES = [
+  { value: 'user', name: 'User', isDefault: true },
+  { value: 'admin', name: 'Admin', isDefault: false },
+];
+
+const IDEA_STATUSES = [
+  { value: 'draft', label: 'Draft', sortOrder: 1, isDefault: true },
+  {
+    value: 'in_progress',
+    label: 'In Progress',
+    sortOrder: 2,
+    isDefault: false,
+  },
+  { value: 'completed', label: 'Completed', sortOrder: 3, isDefault: false },
+  { value: 'archived', label: 'Archived', sortOrder: 4, isDefault: false },
+];
 
 const DEMO_SKILLS: { name: string; category: SkillCategory; weight: number }[] =
   [
@@ -72,17 +92,31 @@ const DEMO_IDEAS: {
 async function bootstrap() {
   const app = await NestFactory.createApplicationContext(AppModule);
 
+  const em = app.get(EntityManager);
   const usersService = app.get(UsersService);
   const cvProfileService = app.get(CvProfileService);
   const ideasService = app.get(IdeasService);
   const scoringService = app.get(ScoringService);
 
+  // ── Lookup tables ──────────────────────────────────
+  for (const r of ROLES) {
+    const existing = await em.findOne(Role, { value: r.value });
+    if (!existing) {
+      em.persist(em.create(Role, r));
+      console.log(`Seeded role: ${r.value}`);
+    }
+  }
+  for (const s of IDEA_STATUSES) {
+    const existing = await em.findOne(IdeaStatus, { value: s.value });
+    if (!existing) {
+      em.persist(em.create(IdeaStatus, s));
+      console.log(`Seeded idea status: ${s.value}`);
+    }
+  }
+  await em.flush();
+
   try {
-    const seedUser = async (
-      email: string,
-      password: string,
-      role: UserRole,
-    ) => {
+    const seedUser = async (email: string, password: string, role: string) => {
       const existing = await usersService.findByEmail(email);
       if (existing) {
         console.log(`${role} already exists (${email}). Skipping.`);
@@ -95,8 +129,8 @@ async function bootstrap() {
       return user;
     };
 
-    const demo = await seedUser(DEMO_EMAIL, DEMO_PASSWORD, UserRole.USER);
-    await seedUser(ADMIN_EMAIL, ADMIN_PASSWORD, UserRole.ADMIN);
+    const demo = await seedUser(DEMO_EMAIL, DEMO_PASSWORD, 'user');
+    await seedUser(ADMIN_EMAIL, ADMIN_PASSWORD, 'admin');
 
     // Only seed CV + ideas for demo user (admin has no profile/ideas)
     const existingProfile = await cvProfileService.getProfile(demo.id);
@@ -130,13 +164,13 @@ async function bootstrap() {
     }
 
     console.log('\nSeeding complete.');
-    console.log(`  user:  ${DEMO_EMAIL} / ${DEMO_PASSWORD} (${UserRole.USER})`);
-    console.log(
-      `  admin: ${ADMIN_EMAIL} / ${ADMIN_PASSWORD} (${UserRole.ADMIN})`,
-    );
+    console.log(`  user:  ${DEMO_EMAIL} / ${DEMO_PASSWORD} (user)`);
+    console.log(`  admin: ${ADMIN_EMAIL} / ${ADMIN_PASSWORD} (admin)`);
   } finally {
     await app.close();
   }
+
+  process.exit(0);
 }
 
 bootstrap().catch((err) => {

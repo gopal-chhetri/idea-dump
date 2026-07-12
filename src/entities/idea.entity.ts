@@ -4,20 +4,18 @@ import {
   PrimaryKey,
   Property,
   ManyToOne,
-  Enum,
   OneToMany,
   OneToOne,
 } from '@mikro-orm/decorators/legacy';
 import { v4 } from 'uuid';
 import { User } from './user.entity';
-import { IdeaStatus } from './enums';
+import { IdeaStatus } from './idea-status.entity';
 import { IdeaScore } from './idea-score.entity';
 import { IdeaRankOverride } from './idea-rank-override.entity';
 
 @Entity({ tableName: 'ideas' })
 export class Idea {
-  [OptionalProps]?:
-    'id' | 'features' | 'status' | 'createdAt' | 'scores' | 'rankOverride';
+  [OptionalProps]?: 'id' | 'features' | 'createdAt' | 'scores' | 'rankOverride';
   @PrimaryKey({ type: 'uuid' })
   id: string = v4();
 
@@ -36,8 +34,8 @@ export class Idea {
   @Property({ type: 'text' })
   useCase!: string;
 
-  @Enum({ items: () => IdeaStatus })
-  status: IdeaStatus = IdeaStatus.INBOX;
+  @ManyToOne(() => IdeaStatus)
+  status!: IdeaStatus;
 
   @Property({ type: 'datetime' })
   createdAt: Date = new Date();

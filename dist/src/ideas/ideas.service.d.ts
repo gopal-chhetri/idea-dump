@@ -1,9 +1,9 @@
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Idea } from '../entities/idea.entity';
-import { IdeaStatus } from '../entities/enums';
 export declare class IdeasService {
     private readonly em;
     constructor(em: EntityManager);
+    private resolveStatus;
     create(userId: string, data: {
         title: string;
         description: string;
@@ -17,7 +17,7 @@ export declare class IdeasService {
         description: string;
         features: string[];
         useCase: string;
-        status: IdeaStatus;
+        status: string;
     }>): Promise<Idea>;
     remove(userId: string, ideaId: string): Promise<void>;
     private assertOwnership;

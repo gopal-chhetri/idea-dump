@@ -1,6 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsArray, IsOptional, IsEnum } from 'class-validator';
-import { IdeaStatus } from '../../entities/enums';
+import { IsString, IsArray, IsOptional } from 'class-validator';
 
 export class CreateIdeaDto {
   @ApiProperty({
@@ -66,11 +65,11 @@ export class UpdateIdeaDto {
   useCase?: string;
 
   @ApiPropertyOptional({
-    enum: IdeaStatus,
-    example: IdeaStatus.ACTIVE,
-    description: 'Workflow status of the idea',
+    example: 'in_progress',
+    description:
+      'Workflow status value of the idea (draft, in_progress, completed, archived)',
   })
-  @IsEnum(IdeaStatus)
+  @IsString()
   @IsOptional()
-  status?: IdeaStatus;
+  status?: string;
 }

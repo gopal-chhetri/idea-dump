@@ -30,14 +30,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const detail =
       exception instanceof Error ? exception.stack : JSON.stringify(exception);
 
-    if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
+    if (status >= 500) {
       this.logger.error(
         `${request.method} ${request.url} -> ${status}: ${message}`,
         detail,
-      );
-    } else {
-      this.logger.warn(
-        `${request.method} ${request.url} -> ${status}: ${message}`,
       );
     }
 

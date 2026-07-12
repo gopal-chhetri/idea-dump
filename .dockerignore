@@ -2,4 +2,6 @@ node_modules
 dist
 .git
 .env
+**/*.pem
+deployments/*/.env
 pnpm-debug.log

@@ -1,20 +1,20 @@
 services:
   app:
+    container_name: idea_dump
+    tty: true
     build:
       context: ../..
       dockerfile: deployments/local-dev/Dockerfile
     ports:
       - '3000:3000'
-    env_file: ../../.env
+    env_file: ./.env
     environment:
       - DB_HOST=postgres
       - REDIS_HOST=redis
     volumes:
       # Mount source for hot-reload (exclude node_modules to keep container deps)
       - ../../src:/app/src
-      - ../../frontend:/app/frontend
-      - ../../public:/app/public
-      - ../../admin:/app/admin
+      - ../../app:/app/app
     depends_on:
       postgres:
         condition: service_healthy
@@ -22,8 +22,9 @@ services:
         condition: service_healthy
 
   postgres:
+    container_name: idea_dump_postgres
     image: postgres:16-alpine
-    env_file: ../../.env
+    env_file: ./.env
     environment:
       POSTGRES_DB: ${DB_NAME:-idea_prioritizer}
       POSTGRES_USER: ${DB_USER:-postgres}
@@ -39,8 +40,9 @@ services:
       retries: 5
 
   redis:
+    container_name: idea_dump_redis
     image: redis:7-alpine
-    env_file: ../../.env
+    env_file: ./.env
     ports:
       - '6379:6379'
     volumes:

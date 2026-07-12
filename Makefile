@@ -10,19 +10,19 @@ build:
 	pnpm run build
 
 up:
-	docker compose --env-file .env -f deployments/local-dev/compose.yml up --build
+	docker compose -f deployments/local-dev/compose.yml up --build
 
 down:
-	docker compose --env-file .env -f deployments/local-dev/compose.yml down
+	docker compose -f deployments/local-dev/compose.yml down
 
 migrate:
-	@set -a; [ -f .env ] && . ./.env; set +a; pnpm run migration:up
+	@set -a; [ -f deployments/local-dev/.env ] && . ./deployments/local-dev/.env; set +a; pnpm run migration:up
 
 migrate-down:
-	@set -a; [ -f .env ] && . ./.env; set +a; pnpm run migration:down
+	@set -a; [ -f deployments/local-dev/.env ] && . ./deployments/local-dev/.env; set +a; pnpm run migration:down
 
 seed:
-	@set -a; [ -f .env ] && . ./.env; set +a; pnpm run seed
+	@set -a; [ -f deployments/local-dev/.env ] && . ./deployments/local-dev/.env; set +a; pnpm run seed
 
 swagger:
 	@echo "Swagger UI:      http://localhost:3000/api/docs"

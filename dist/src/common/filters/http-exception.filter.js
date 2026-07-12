@@ -22,11 +22,8 @@ let HttpExceptionFilter = HttpExceptionFilter_1 = class HttpExceptionFilter {
             ? exception.message
             : 'Internal server error';
         const detail = exception instanceof Error ? exception.stack : JSON.stringify(exception);
-        if (status >= common_1.HttpStatus.INTERNAL_SERVER_ERROR) {
+        if (status >= 500) {
             this.logger.error(`${request.method} ${request.url} -> ${status}: ${message}`, detail);
-        }
-        else {
-            this.logger.warn(`${request.method} ${request.url} -> ${status}: ${message}`);
         }
         response.status(status).json({
             statusCode: status,

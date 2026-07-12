@@ -21,7 +21,7 @@ let RankingService = class RankingService {
         this.em = em;
     }
     async getRankedIdeas(userId) {
-        const ideas = await this.em.find(idea_entity_1.Idea, { user: userId }, { populate: ['scores', 'rankOverride'] });
+        const ideas = await this.em.find(idea_entity_1.Idea, { user: userId }, { populate: ['scores', 'rankOverride', 'status'] });
         return ideas.sort((a, b) => {
             const aPinned = a.rankOverride?.pinned ? 1 : 0;
             const bPinned = b.rankOverride?.pinned ? 1 : 0;

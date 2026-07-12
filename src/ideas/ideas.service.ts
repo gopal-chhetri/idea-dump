@@ -6,12 +6,22 @@ import {
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Idea } from '../entities/idea.entity';
 import { User } from '../entities/user.entity';
+import { IdeaStatus } from '../entities/idea-status.entity';
 import { DailyIdeaQuota } from '../entities/daily-idea-quota.entity';
-import { IdeaStatus } from '../entities/enums';
+
+const DEFAULT_STATUS = 'draft';
 
 @Injectable()
 export class IdeasService {
   constructor(private readonly em: EntityManager) {}
+
+  private async resolveStatus(value: string): Promise<IdeaStatus> {
+    const status = await this.em.findOne(IdeaStatus, { value });
+    if (!status) {
+      throw new NotFoundException(`Unknown idea status: ${value}`);
+    }
+    return status;
+  }
 
   async create(
     userId: string,
@@ -23,6 +33,9 @@ export class IdeasService {
     },
   ): Promise<Idea> {
     const user = await this.em.findOneOrFail(User, { id: userId });
+    const status =
+      (await this.em.findOne(IdeaStatus, { isDefault: true })) ??
+      (await this.resolveStatus(DEFAULT_STATUS));
 
     const idea = this.em.create(Idea, {
       user,
@@ -30,7 +43,7 @@ export class IdeasService {
       description: data.description,
       features: data.features ?? [],
       useCase: data.useCase,
-      status: IdeaStatus.INBOX,
+      status,
     });
     this.em.persist(idea);
 
@@ -46,7 +59,7 @@ export class IdeasService {
       Idea,
       { user: userId },
       {
-        populate: ['scores', 'rankOverride'],
+        populate: ['scores', 'rankOverride', 'status'],
         orderBy: { createdAt: 'DESC' },
       },
     );
@@ -56,7 +69,7 @@ export class IdeasService {
     const idea = await this.em.findOne(
       Idea,
       { id: ideaId },
-      { populate: ['scores', 'rankOverride'] },
+      { populate: ['scores', 'rankOverride', 'status'] },
     );
 
     if (!idea) throw new NotFoundException('Idea not found');
@@ -72,7 +85,7 @@ export class IdeasService {
       description: string;
       features: string[];
       useCase: string;
-      status: IdeaStatus;
+      status: string;
     }>,
   ): Promise<Idea> {
     const idea = await this.findOne(userId, ideaId);
@@ -81,7 +94,8 @@ export class IdeasService {
     if (data.description !== undefined) idea.description = data.description;
     if (data.features !== undefined) idea.features = data.features;
     if (data.useCase !== undefined) idea.useCase = data.useCase;
-    if (data.status !== undefined) idea.status = data.status;
+    if (data.status !== undefined)
+      idea.status = await this.resolveStatus(data.status);
 
     await this.em.flush();
     return idea;

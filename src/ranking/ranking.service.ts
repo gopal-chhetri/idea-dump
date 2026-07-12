@@ -3,10 +3,9 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
-import { EntityManager, raw } from '@mikro-orm/postgresql';
+import { EntityManager } from '@mikro-orm/postgresql';
 import { Idea } from '../entities/idea.entity';
 import { IdeaRankOverride } from '../entities/idea-rank-override.entity';
-import { IdeaScore } from '../entities/idea-score.entity';
 import { ScoringMethod } from '../entities/enums';
 
 @Injectable()
@@ -22,7 +21,7 @@ export class RankingService {
     const ideas = await this.em.find(
       Idea,
       { user: userId },
-      { populate: ['scores', 'rankOverride'] },
+      { populate: ['scores', 'rankOverride', 'status'] },
     );
 
     // Sort in application code to match the spec

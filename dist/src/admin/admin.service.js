@@ -48,8 +48,8 @@ const postgresql_1 = require("@mikro-orm/postgresql");
 const crypto = __importStar(require("node:crypto"));
 const user_entity_1 = require("../entities/user.entity");
 const idea_entity_1 = require("../entities/idea.entity");
+const role_entity_1 = require("../entities/role.entity");
 const system_setting_entity_1 = require("../entities/system-setting.entity");
-const enums_1 = require("../entities/enums");
 const scoring_service_1 = require("../scoring/scoring.service");
 const ENCRYPTION_KEY = process.env.APP_ENCRYPTION_KEY || 'insecure-dev-key-32-chars-long!!';
 const ALGORITHM = 'aes-256-gcm';
@@ -67,45 +67,72 @@ let AdminService = class AdminService {
     async getStats() {
         const userCount = await this.em.count(user_entity_1.User, {});
         const ideaCount = await this.em.count(idea_entity_1.Idea, {});
-        const adminCount = await this.em.count(user_entity_1.User, { role: enums_1.UserRole.ADMIN });
+        const adminCount = await this.em.count(user_entity_1.User, { role: { value: 'admin' } });
         return { userCount, adminCount, ideaCount };
     }
     async listUsers(page = 1, limit = 20) {
         const offset = (page - 1) * limit;
         const [users, total] = await this.em.findAndCount(user_entity_1.User, {}, {
+            populate: ['role'],
             orderBy: { createdAt: 'DESC' },
             limit,
             offset,
         });
-        return { users, total, page, limit };
+        return {
+            users: users.map((u) => ({
+                id: u.id,
+                email: u.email,
+                role: u.role.value,
+                createdAt: u.createdAt,
+            })),
+            total,
+            page,
+            limit,
+        };
     }
     async getUser(userId) {
-        const user = await this.em.findOne(user_entity_1.User, { id: userId });
-        if (!user)
-            throw new common_1.NotFoundException('User not found');
-        return user;
+        const user = await this.em.findOneOrFail(user_entity_1.User, { id: userId }, { populate: ['role'] });
+        return {
+            id: user.id,
+            email: user.email,
+            role: user.role.value,
+            createdAt: user.createdAt,
+        };
     }
     async createUser(data) {
         const existing = await this.em.findOne(user_entity_1.User, { email: data.email });
         if (existing)
             throw new common_1.ConflictException('Email already in use');
+        const roleValue = data.role ?? 'user';
+        const role = await this.em.findOneOrFail(role_entity_1.Role, { value: roleValue });
         const user = this.em.create(user_entity_1.User, {
             email: data.email,
             passwordHash: data.passwordHash,
-            role: data.role ?? enums_1.UserRole.USER,
+            role,
         });
         this.em.persist(user);
         await this.em.flush();
-        return user;
+        return {
+            id: user.id,
+            email: user.email,
+            role: role.value,
+            createdAt: user.createdAt,
+        };
     }
     async updateUser(userId, data) {
-        const user = await this.em.findOneOrFail(user_entity_1.User, { id: userId });
+        const user = await this.em.findOneOrFail(user_entity_1.User, { id: userId }, { populate: ['role'] });
         if (data.email !== undefined)
             user.email = data.email;
-        if (data.role !== undefined)
-            user.role = data.role;
+        if (data.role !== undefined) {
+            user.role = await this.em.findOneOrFail(role_entity_1.Role, { value: data.role });
+        }
         await this.em.flush();
-        return user;
+        return {
+            id: user.id,
+            email: user.email,
+            role: user.role.value,
+            createdAt: user.createdAt,
+        };
     }
     async deleteUser(userId) {
         const user = await this.em.findOneOrFail(user_entity_1.User, { id: userId });
@@ -116,12 +143,32 @@ let AdminService = class AdminService {
     async listIdeas(page = 1, limit = 20) {
         const offset = (page - 1) * limit;
         const [ideas, total] = await this.em.findAndCount(idea_entity_1.Idea, {}, {
-            populate: ['scores', 'rankOverride', 'user'],
+            populate: ['scores', 'rankOverride', 'user', 'status'],
             orderBy: { createdAt: 'DESC' },
             limit,
             offset,
         });
-        return { ideas, total, page, limit };
+        return {
+            ideas: ideas.map((idea) => ({
+                id: idea.id,
+                title: idea.title,
+                status: idea.status.value,
+                user: idea.user ? { id: idea.user.id, email: idea.user.email } : null,
+                scores: idea.scores && idea.scores.length
+                    ? idea.scores.map((s) => ({
+                        finalScore: s.finalScore,
+                        fitScore: s.fitScore,
+                        effortScore: s.effortScore,
+                        noveltyScore: s.noveltyScore,
+                        scoringMethod: s.scoringMethod,
+                    }))
+                    : [],
+                createdAt: idea.createdAt,
+            })),
+            total,
+            page,
+            limit,
+        };
     }
     async deleteIdea(ideaId) {
         const idea = await this.em.findOneOrFail(idea_entity_1.Idea, { id: ideaId });

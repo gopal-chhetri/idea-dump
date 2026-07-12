@@ -19,6 +19,6 @@ WORKDIR /app
 COPY package*.json pnpm-lock.yaml ./
 RUN npm install -g pnpm && pnpm install --prod --frozen-lockfile
 COPY --from=build /app/dist ./dist
-COPY frontend ./frontend
+COPY app ./app
 EXPOSE 3000
 CMD ["node", "dist/src/main.js"]

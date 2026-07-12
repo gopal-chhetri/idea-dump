@@ -17,10 +17,8 @@ WORKDIR /app
 COPY package*.json pnpm-lock.yaml ./
 RUN npm install -g pnpm && pnpm install --prod --frozen-lockfile
 COPY --from=build /app/dist ./dist
-COPY --from=build /app/frontend ./frontend
-COPY --from=build /app/public ./public
-COPY --from=build /app/admin ./admin
-EXPOSE 3000
+COPY --from=build /app/app ./app
+EXPOSE 7501
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
+  CMD-SHELL wget --no-verbose --tries=1 --spider http://localhost:${PORT:-3000}/health || exit 1
 CMD ["node", "dist/src/main.js"]

@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, type JwtModuleOptions } from '@nestjs/jwt';
+
+type JwtExpiresIn = NonNullable<JwtModuleOptions['signOptions']>['expiresIn'];
 import { PassportModule } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
@@ -18,7 +20,8 @@ import { UsersModule } from '../users/users.module';
         ? Buffer.from(process.env.JWT_PRIVATE_KEY, 'base64').toString('utf-8')
         : 'dev-secret-not-for-production',
       signOptions: {
-        expiresIn: (process.env.JWT_ACCESS_EXPIRY || '15m') as any,
+        expiresIn: (process.env.JWT_ACCESS_EXPIRY ||
+          '15m') as unknown as JwtExpiresIn,
         algorithm: process.env.JWT_PRIVATE_KEY ? 'RS256' : 'HS256',
       },
     }),

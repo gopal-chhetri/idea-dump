@@ -7,8 +7,13 @@ import {
   Inject,
 } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/postgresql';
+import type { Request } from 'express';
 import Redis from 'ioredis';
 import { DailyIdeaQuota } from '../entities/daily-idea-quota.entity';
+
+interface AuthedRequest extends Request {
+  user?: { id: string };
+}
 
 @Injectable()
 export class RateLimitGuard implements CanActivate {
@@ -22,7 +27,7 @@ export class RateLimitGuard implements CanActivate {
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<AuthedRequest>();
     const userId = request.user?.id;
     if (!userId) return false;
 
@@ -49,7 +54,10 @@ export class RateLimitGuard implements CanActivate {
       if (err instanceof HttpException) throw err;
 
       // Redis unavailable — fall back to DB
-      console.warn('Redis unavailable, falling back to DB quota check:', err);
+      console.warn(
+        'Redis unavailable, falling back to DB quota check:',
+        err as unknown,
+      );
       await this.checkDbQuota(userId, today);
     }
 

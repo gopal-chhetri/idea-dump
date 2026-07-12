@@ -12,11 +12,6 @@ export declare enum SkillCategory {
     TOOL = "tool",
     DOMAIN = "domain"
 }
-export declare enum IdeaStatus {
-    INBOX = "inbox",
-    ACTIVE = "active",
-    ARCHIVED = "archived"
-}
 export declare enum ScoringMethod {
     RULE_BASED = "rule_based",
     LLM = "llm"

@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="navbar.css" />
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     .view { display: none; }
@@ -28,16 +29,16 @@
     <span>Checking session...</span>
   </div>
 
-  <!-- ════════════════════════════════════════════════════════════════
+  <!-- ══════════════════════════════════════════════════════════════
        LANDING VIEW (not authenticated)
-       ════════════════════════════════════════════════════════════════ -->
+       ══════════════════════════════════════════════════════════════ -->
   <div id="landing-view" class="view">
 
-    <nav class="landing-nav container">
-      <div class="brand">
+    <nav class="glass-nav" id="top-nav-landing">
+      <a href="#" class="nav-brand">
         <img class="logo-mark" src="/app/logo.png" alt="Idea Dump" />
         <span>Idea Dump</span>
-      </div>
+      </a>
       <div class="nav-links">
         <a href="#about">About</a>
         <a href="#how-it-works">How it works</a>
@@ -63,7 +64,7 @@
       </p>
       <div class="cta-row">
         <button id="landing-cta-btn" class="btn btn-primary">
-          <i data-lucide="rocket"></i> Get Started — It's Free
+          <i data-lucide="rocket"></i> Get Started
         </button>
         <a href="#about" class="btn btn-secondary">
           <i data-lucide="info"></i> Learn More
@@ -201,122 +202,258 @@
   </div>
 
   <!-- ════════════════════════════════════════════════════════════════
-       DASHBOARD VIEW (authenticated as user)
+       DASHBOARD VIEW (authenticated) — app shell
        ════════════════════════════════════════════════════════════════ -->
   <div id="dashboard-view" class="view">
 
-    <header class="app-header">
-      <div class="header-logo">
-        <img class="logo-mark" src="/app/logo.png" alt="Idea Dump" />
-        <h1>Idea Dump</h1>
-      </div>
-      <div class="header-actions">
-        <div id="connection-badge" class="badge badge-offline">
-          <span class="indicator"></span>
-          <span class="label">Mock Mode</span>
-        </div>
-        <div id="auth-section">
-          <button id="auth-btn" class="btn btn-secondary">
+    <div id="view-app" class="app">
+
+      <!-- Top navigation -->
+      <nav id="top-nav" class="glass-nav">
+        <a href="#" class="nav-brand">
+          <img class="logo-mark" src="/app/logo.png" alt="Idea Dump" />
+          <span>Idea Dump</span>
+        </a>
+        <div class="nav-links">
+          <div id="connection-badge" class="badge badge-offline">
+            <span class="indicator"></span>
+            <span class="label">Mock Mode</span>
+          </div>
+          <button id="auth-btn" class="btn btn-secondary btn-sm">
             <i data-lucide="key-round"></i> Authenticate
           </button>
         </div>
-      </div>
-    </header>
+      </nav>
 
-    <main class="app-container">
-      <aside class="sidebar">
-        <section class="card cv-profile-card">
-          <div class="card-header">
-            <i data-lucide="user"></i>
-            <h2>CV Profile</h2>
-          </div>
-          <div class="card-body">
-            <div class="form-group">
-              <label for="cv-summary">Professional Summary</label>
-              <textarea id="cv-summary" placeholder="Describe your experience, stack, and domain expertise..."></textarea>
-              <button id="save-summary-btn" class="btn btn-primary btn-sm">Save Summary</button>
+      <!-- Mobile sidebar toggle -->
+      <button id="mobile-menu-toggle" class="mobile-menu-toggle">
+        <i data-lucide="menu"></i>
+      </button>
+
+      <!-- Mobile sidebar overlay -->
+      <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+      <!-- Sidebar navigation -->
+      <aside id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+          <img class="logo-mark" src="/app/logo.png" alt="Idea Dump" />
+          <span class="sidebar-title">Idea Dump</span>
+        </div>
+        <nav class="sidebar-nav">
+          <a href="#" class="nav-item active" data-view="my-backlog">
+            <i data-lucide="lightbulb" class="nav-icon"></i> <span>My Backlog</span>
+          </a>
+          <a href="#" class="nav-item" data-view="cv-profile">
+            <i data-lucide="user" class="nav-icon"></i> <span>CV Profile</span>
+          </a>
+          <a href="#" class="nav-item" data-view="skills">
+            <i data-lucide="award" class="nav-icon"></i> <span>Skills</span>
+          </a>
+          <a href="#" class="nav-item admin-only" data-view="admin-users">
+            <i data-lucide="users" class="nav-icon"></i> <span>Users</span>
+          </a>
+          <a href="#" class="nav-item admin-only" data-view="admin-ideas">
+            <i data-lucide="layers" class="nav-icon"></i> <span>Ideas</span>
+          </a>
+          <!-- <a href="#" class="nav-item admin-only" data-view="admin-settings">
+            <i data-lucide="settings" class="nav-icon"></i> <span>Settings</span>
+          </a> -->
+        </nav>
+        <div class="sidebar-footer">
+          <div class="user-pill">
+            <div class="user-avatar" id="sidebar-avatar">U</div>
+            <div class="user-info">
+              <span class="user-name" id="sidebar-name">User</span>
+              <span class="user-role" id="sidebar-role">user</span>
             </div>
           </div>
-        </section>
-        <section class="card cv-skills-card">
-          <div class="card-header">
-            <i data-lucide="award"></i>
-            <h2>Core Skills</h2>
-            <button id="add-skill-trigger" class="btn btn-icon" title="Add skill">
-              <i data-lucide="plus"></i>
-            </button>
-          </div>
-          <div class="card-body">
-            <div id="skills-list" class="skills-grid">
-              <div class="empty-state">
-                <p>No skills added yet. Define your profile to calibrate the scoring engine.</p>
-              </div>
-            </div>
-          </div>
-        </section>
+          <button class="btn btn-ghost btn-sm btn-full" id="sidebar-logout">
+            <i data-lucide="log-out" class="icon-sm"></i> <span>Terminate Session</span>
+          </button>
+        </div>
       </aside>
 
-      <section class="content-deck">
-        <section class="card submission-card">
-          <div class="card-header">
-            <i data-lucide="lightbulb"></i>
-            <h2>Capture Project Idea</h2>
-            <span class="quota-counter" id="quota-display">Quota: 2 / 2 remaining</span>
+      <!-- Main content -->
+      <main class="main-content">
+
+        <!-- ── MY BACKLOG PAGE ── -->
+        <section id="page-my-backlog" class="page active">
+          <section class="card submission-card">
+            <div class="card-header">
+              <i data-lucide="lightbulb"></i>
+              <h2>Capture Project Idea</h2>
+              <span class="quota-counter" id="quota-display">Quota: 2 / 2 remaining</span>
+            </div>
+            <form id="idea-form" class="card-body">
+              <div class="form-row">
+                <div class="form-group flex-2">
+                  <label for="idea-title">Title</label>
+                  <input type="text" id="idea-title" placeholder="e.g., Real-time Collaborative Markdown Editor" required />
+                </div>
+                <div class="form-group flex-1">
+                  <label for="idea-status">Status</label>
+                  <select id="idea-status">
+                    <option value="draft">Draft</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                    <option value="archived">Archived</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="idea-desc">Description</label>
+                <textarea id="idea-desc" placeholder="What is the problem statement and core value proposition?..." required></textarea>
+              </div>
+              <div class="form-group">
+                <label for="idea-features">Key Features (comma separated)</label>
+                <input type="text" id="idea-features" placeholder="e.g., Yjs CRDTs, WebSocket syncing, Version history, Theme toggle" />
+              </div>
+              <div class="form-group">
+                <label for="idea-usecase">Target Use Case</label>
+                <textarea id="idea-usecase" placeholder="Who benefits from this? How does it demonstrate your engineering capability?..." required></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary">
+                <i data-lucide="plus-circle"></i> Submit & Score Idea
+              </button>
+            </form>
+          </section>
+
+          <section class="ideas-deck">
+            <div class="deck-header">
+              <div class="deck-title-group">
+                <i data-lucide="trending-up"></i>
+                <h2>Prioritized Backlog</h2>
+              </div>
+              <button id="rescore-all-btn" class="btn btn-secondary btn-sm" style="display:none">
+                <i data-lucide="rotate-cw"></i> Rescore Backlog
+              </button>
+            </div>
+            <div id="ideas-stack" class="stack-layout">
+              <div class="empty-state">
+                <i data-lucide="inbox" class="icon-lg"></i>
+                <h3>No ideas captured</h3>
+                <p>Your prioritized backlog will formulate once you submit your first project idea.</p>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <!-- ── CV PROFILE PAGE ── -->
+        <section id="page-cv-profile" class="page">
+          <header class="page-header">
+            <h2>CV Profile</h2>
+            <p class="page-subtitle">Define your professional summary to calibrate the scoring engine.</p>
+          </header>
+          <section class="card cv-profile-card">
+            <div class="card-header">
+              <i data-lucide="user"></i>
+              <h2>Professional Summary</h2>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <label for="cv-summary">Professional Summary</label>
+                <textarea id="cv-summary" placeholder="Describe your experience, stack, and domain expertise..."></textarea>
+                <button id="save-summary-btn" class="btn btn-primary btn-sm">Save Summary</button>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <!-- ── SKILLS PAGE ── -->
+        <section id="page-skills" class="page">
+          <header class="page-header">
+            <h2>Core Skills</h2>
+            <p class="page-subtitle">Add the skills that calibrate idea-fit scoring.</p>
+          </header>
+          <section class="card cv-skills-card">
+            <div class="card-header">
+              <i data-lucide="award"></i>
+              <h2>Core Skills</h2>
+              <button id="add-skill-trigger" class="btn btn-icon" title="Add skill">
+                <i data-lucide="plus"></i>
+              </button>
+            </div>
+            <div class="card-body">
+              <div id="skills-list" class="skills-grid">
+                <div class="empty-state">
+                  <p>No skills added yet. Define your profile to calibrate the scoring engine.</p>
+                </div>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <!-- ── ADMIN: USERS PAGE ── -->
+        <section id="page-admin-users" class="page admin-only">
+          <header class="page-header">
+            <h2>Users</h2>
+            <p class="page-subtitle">Manage system users and access levels.</p>
+          </header>
+          <div class="stats-grid" id="admin-stats-users">
+            <div class="stat-card glass"><span class="stat-num" id="stat-users">—</span><span class="stat-lbl">Users</span></div>
+            <div class="stat-card glass"><span class="stat-num" id="stat-admins">—</span><span class="stat-lbl">Admins</span></div>
           </div>
-          <form id="idea-form" class="card-body">
-            <div class="form-row">
-              <div class="form-group flex-2">
-                <label for="idea-title">Title</label>
-                <input type="text" id="idea-title" placeholder="e.g., Real-time Collaborative Markdown Editor" required />
-              </div>
-              <div class="form-group flex-1">
-                <label for="idea-status">Status</label>
-                <select id="idea-status">
-                  <option value="inbox">Inbox</option>
-                  <option value="active">Active</option>
-                  <option value="archived">Archived</option>
-                </select>
-              </div>
+          <div class="section-head">
+            <h3>Identity Directory</h3>
+            <div class="section-actions">
+              <button id="admin-create-user-btn" class="btn btn-primary btn-sm"><i data-lucide="user-plus"></i> Create User</button>
+              <button id="admin-users-prev" class="btn btn-secondary btn-sm">Prev</button>
+              <span id="admin-users-page" class="page-info">Page 1</span>
+              <button id="admin-users-next" class="btn btn-secondary btn-sm">Next</button>
             </div>
-            <div class="form-group">
-              <label for="idea-desc">Description</label>
-              <textarea id="idea-desc" placeholder="What is the problem statement and core value proposition?..." required></textarea>
+          </div>
+          <div class="table-wrap">
+            <table class="data">
+              <thead><tr><th>Email</th><th class="hide-mobile">Created</th><th>Role</th><th class="row-actions">Actions</th></tr></thead>
+              <tbody id="admin-users-tbody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ── ADMIN: IDEAS PAGE ── -->
+        <section id="page-admin-ideas" class="page admin-only">
+          <header class="page-header">
+            <h2>Ideas</h2>
+            <p class="page-subtitle">Manage all ideas across the system.</p>
+          </header>
+          <div class="stats-grid" id="admin-stats-ideas">
+            <div class="stat-card glass"><span class="stat-num" id="stat-ideas">—</span><span class="stat-lbl">Ideas</span></div>
+          </div>
+          <div class="section-head">
+            <h3>All Ideas</h3>
+            <div class="section-actions">
+              <button id="admin-rescore-all-btn" class="btn btn-secondary btn-sm"><i data-lucide="rotate-cw"></i> Rescore All</button>
+              <button id="admin-ideas-prev" class="btn btn-secondary btn-sm">Prev</button>
+              <span id="admin-ideas-page" class="page-info">Page 1</span>
+              <button id="admin-ideas-next" class="btn btn-secondary btn-sm">Next</button>
             </div>
-            <div class="form-group">
-              <label for="idea-features">Key Features (comma separated)</label>
-              <input type="text" id="idea-features" placeholder="e.g., Yjs CRDTs, WebSocket syncing, Version history, Theme toggle" />
-            </div>
-            <div class="form-group">
-              <label for="idea-usecase">Target Use Case</label>
-              <textarea id="idea-usecase" placeholder="Who benefits from this? How does it demonstrate your engineering capability?..." required></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary">
-              <i data-lucide="plus-circle"></i> Submit & Score Idea
-            </button>
+          </div>
+          <div class="table-wrap">
+            <table class="data">
+              <thead><tr><th>Title</th><th class="hide-mobile">Owner</th><th>Score</th><th>Status</th><th class="hide-mobile">Created</th><th class="row-actions">Actions</th></tr></thead>
+              <tbody id="admin-ideas-tbody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ── ADMIN: SETTINGS PAGE ── -->
+        <section id="page-admin-settings" class="page admin-only">
+          <header class="page-header">
+            <h2>System Settings</h2>
+            <p class="page-subtitle">Manage encrypted platform configuration.</p>
+          </header>
+          <div id="admin-settings-list" class="settings-list">
+            <p style="color:var(--text-secondary)">No settings configured yet.</p>
+          </div>
+          <form id="admin-settings-form" class="inline-form">
+            <input type="text" id="admin-setting-key" placeholder="Key (e.g., SCORING_FIT_WEIGHT)" required />
+            <input type="text" id="admin-setting-value" placeholder="Value" required />
+            <button type="submit" class="btn btn-primary btn-sm">Save Setting</button>
           </form>
         </section>
 
-        <section class="ideas-deck">
-          <div class="deck-header">
-            <div class="deck-title-group">
-              <i data-lucide="trending-up"></i>
-              <h2>Prioritized Backlog</h2>
-            </div>
-            <button id="rescore-all-btn" class="btn btn-secondary btn-sm" style="display:none">
-              <i data-lucide="rotate-cw"></i> Rescore Backlog
-            </button>
-          </div>
-          <div id="ideas-stack" class="stack-layout">
-            <div class="empty-state">
-              <i data-lucide="inbox" class="icon-lg"></i>
-              <h3>No ideas captured</h3>
-              <p>Your prioritized backlog will formulate once you submit your first project idea.</p>
-            </div>
-          </div>
-        </section>
-      </section>
-    </main>
-
+      </main>
+    </div>
   </div>
 
   <!-- ═══ Modals ═══ -->
@@ -404,6 +541,35 @@
           <button id="github-auth-btn" class="btn btn-secondary"><i data-lucide="github"></i> GitHub</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ── Admin: Create User Modal ── -->
+  <div id="admin-user-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>Create User</h2>
+        <button class="modal-close"><i data-lucide="x"></i></button>
+      </div>
+      <form id="admin-user-form" class="modal-body">
+        <div class="form-group">
+          <label for="admin-user-email">Email</label>
+          <input type="email" id="admin-user-email" required placeholder="name@domain.com" />
+        </div>
+        <div class="form-group">
+          <label for="admin-user-password">Password (optional)</label>
+          <input type="password" id="admin-user-password" minlength="8" placeholder="Leave blank for OAuth-only" />
+        </div>
+        <div class="form-group">
+          <label for="admin-user-role">Role</label>
+          <select id="admin-user-role">
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div id="admin-user-error" class="form-error"></div>
+        <button type="submit" class="btn btn-primary btn-block">Create User</button>
+      </form>
     </div>
   </div>
 

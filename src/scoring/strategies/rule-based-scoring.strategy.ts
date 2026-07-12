@@ -6,7 +6,7 @@ import { CvSkill } from '../../entities/cv-skill.entity';
 
 @Injectable()
 export class RuleBasedScoringStrategy implements ScoringStrategy {
-  async score(
+  score(
     idea: Idea,
     profile: CvProfile,
     userIdeas: Idea[],
@@ -15,7 +15,7 @@ export class RuleBasedScoringStrategy implements ScoringStrategy {
     const effortScore = this.computeEffortScore(idea);
     const noveltyScore = this.computeNoveltyScore(idea, userIdeas);
 
-    return { fitScore, effortScore, noveltyScore };
+    return Promise.resolve({ fitScore, effortScore, noveltyScore });
   }
 
   // ── Fit: overlap between idea text and CV skills ──────

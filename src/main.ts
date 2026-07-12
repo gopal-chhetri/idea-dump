@@ -31,17 +31,13 @@ async function bootstrap() {
     res.status(200).json({ status: 'ok' });
   });
 
-  // Serve static assets
-  app.useStaticAssets(join(process.cwd(), 'frontend'), { prefix: '/app' });
-  app.useStaticAssets(join(process.cwd(), 'admin'), { prefix: '/admin' });
+  // Serve static assets — single unified SPA
+  app.useStaticAssets(join(process.cwd(), 'app'), { prefix: '/app' });
   httpAdapter.get('/', (_req: Request, res: Response) => {
     res.redirect('/app/');
   });
   httpAdapter.get('/app', (_req: Request, res: Response) => {
     res.redirect('/app/');
-  });
-  httpAdapter.get('/admin', (_req: Request, res: Response) => {
-    res.redirect('/admin/');
   });
 
   app.useGlobalPipes(
@@ -83,4 +79,4 @@ async function bootstrap() {
 
   await app.listen(process.env.PORT ?? 3000);
 }
-bootstrap();
+void bootstrap();

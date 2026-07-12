@@ -1,7 +1,4 @@
 import { EntityManager } from '@mikro-orm/postgresql';
-import { User } from '../entities/user.entity';
-import { Idea } from '../entities/idea.entity';
-import { UserRole } from '../entities/enums';
 import { ScoringService } from '../scoring/scoring.service';
 export declare class AdminService {
     private readonly em;
@@ -13,26 +10,62 @@ export declare class AdminService {
         ideaCount: number;
     }>;
     listUsers(page?: number, limit?: number): Promise<{
-        users: import("@mikro-orm/postgresql", { with: { "resolution-mode": "import" } }).Loaded<User, never, never, never>[];
+        users: {
+            id: string;
+            email: string;
+            role: string;
+            createdAt: Date;
+        }[];
         total: number;
         page: number;
         limit: number;
     }>;
-    getUser(userId: string): Promise<import("@mikro-orm/postgresql", { with: { "resolution-mode": "import" } }).Loaded<User, never, never, never>>;
+    getUser(userId: string): Promise<{
+        id: string;
+        email: string;
+        role: string;
+        createdAt: Date;
+    }>;
     createUser(data: {
         email: string;
         passwordHash?: string;
-        role?: UserRole;
-    }): Promise<User>;
+        role?: string;
+    }): Promise<{
+        id: string;
+        email: string;
+        role: string;
+        createdAt: Date;
+    }>;
     updateUser(userId: string, data: {
         email?: string;
-        role?: UserRole;
-    }): Promise<import("@mikro-orm/postgresql", { with: { "resolution-mode": "import" } }).Loaded<User, never, never, never>>;
+        role?: string;
+    }): Promise<{
+        id: string;
+        email: string;
+        role: string;
+        createdAt: Date;
+    }>;
     deleteUser(userId: string): Promise<{
         deleted: boolean;
     }>;
     listIdeas(page?: number, limit?: number): Promise<{
-        ideas: import("@mikro-orm/postgresql", { with: { "resolution-mode": "import" } }).Loaded<Idea, "user" | "scores" | "rankOverride", never, never>[];
+        ideas: {
+            id: string;
+            title: string;
+            status: string;
+            user: {
+                id: string;
+                email: string;
+            } | null;
+            scores: {
+                finalScore: number;
+                fitScore: number;
+                effortScore: number;
+                noveltyScore: number;
+                scoringMethod: import("../entities").ScoringMethod;
+            }[];
+            createdAt: Date;
+        }[];
         total: number;
         page: number;
         limit: number;

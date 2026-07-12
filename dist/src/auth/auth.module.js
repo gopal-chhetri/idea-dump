@@ -30,7 +30,8 @@ exports.AuthModule = AuthModule = __decorate([
                     ? Buffer.from(process.env.JWT_PRIVATE_KEY, 'base64').toString('utf-8')
                     : 'dev-secret-not-for-production',
                 signOptions: {
-                    expiresIn: (process.env.JWT_ACCESS_EXPIRY || '15m'),
+                    expiresIn: (process.env.JWT_ACCESS_EXPIRY ||
+                        '15m'),
                     algorithm: process.env.JWT_PRIVATE_KEY ? 'RS256' : 'HS256',
                 },
             }),

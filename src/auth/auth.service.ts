@@ -127,7 +127,12 @@ export class AuthService {
   // ── Helpers ─────────────────────────────────────────────
 
   private async issueTokens(user: User) {
-    const payload = { sub: user.id, email: user.email, role: user.role };
+    const populated =
+      user.role && typeof user.role === 'object'
+        ? user
+        : await this.em.populate(user, ['role']);
+    const roleValue = populated.role.value;
+    const payload = { sub: user.id, email: user.email, role: roleValue };
 
     const accessToken = await this.jwtService.signAsync(payload);
 

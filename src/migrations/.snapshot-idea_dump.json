@@ -670,6 +670,140 @@
       "comment": null
     },
     {
+      "name": "idea_status",
+      "schema": "public",
+      "columns": {
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "is_default": {
+          "name": "is_default",
+          "type": "boolean",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "false",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "boolean"
+        },
+        "label": {
+          "name": "label",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "0",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "value": {
+          "name": "value",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "idea_status_pkey",
+          "primary": true,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "value"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "idea_status_value_unique",
+          "primary": false,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "triggers": [],
+      "foreignKeys": {},
+      "comment": null
+    },
+    {
       "name": "ideas",
       "schema": "public",
       "columns": {
@@ -741,9 +875,9 @@
           "enumItems": [],
           "mappedType": "uuid"
         },
-        "status": {
-          "name": "status",
-          "type": "text",
+        "status_id": {
+          "name": "status_id",
+          "type": "uuid",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
@@ -752,15 +886,11 @@
           "length": null,
           "precision": null,
           "scale": null,
-          "default": "'inbox'",
+          "default": null,
           "comment": null,
           "collation": null,
-          "enumItems": [
-            "inbox",
-            "active",
-            "archived"
-          ],
-          "mappedType": "enum"
+          "enumItems": [],
+          "mappedType": "uuid"
         },
         "title": {
           "name": "title",
@@ -826,16 +956,20 @@
           "unique": true
         }
       ],
-      "checks": [
-        {
-          "name": "ideas_status_check",
-          "expression": "\"status\" in ('inbox', 'active', 'archived')",
-          "definition": "check (\"status\" in ('inbox', 'active', 'archived'))",
-          "columnName": "status"
-        }
-      ],
+      "checks": [],
       "triggers": [],
       "foreignKeys": {
+        "ideas_status_id_foreign": {
+          "columnNames": [
+            "status_id"
+          ],
+          "constraintName": "ideas_status_id_foreign",
+          "localTableName": "public.ideas",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.idea_status"
+        },
         "ideas_user_id_foreign": {
           "columnNames": [
             "user_id"
@@ -1127,6 +1261,123 @@
       "comment": null
     },
     {
+      "name": "roles",
+      "schema": "public",
+      "columns": {
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "is_default": {
+          "name": "is_default",
+          "type": "boolean",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "false",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "boolean"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "value": {
+          "name": "value",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "roles_pkey",
+          "primary": true,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "value"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "roles_value_unique",
+          "primary": false,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "triggers": [],
+      "foreignKeys": {},
+      "comment": null
+    },
+    {
       "name": "users",
       "schema": "public",
       "columns": {
@@ -1197,6 +1448,23 @@
           "collation": null,
           "enumItems": [],
           "mappedType": "string"
+        },
+        "role_id": {
+          "name": "role_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
         }
       },
       "indexes": [
@@ -1223,7 +1491,19 @@
       ],
       "checks": [],
       "triggers": [],
-      "foreignKeys": {},
+      "foreignKeys": {
+        "users_role_id_foreign": {
+          "columnNames": [
+            "role_id"
+          ],
+          "constraintName": "users_role_id_foreign",
+          "localTableName": "public.users",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.roles"
+        }
+      },
       "comment": null
     }
   ],

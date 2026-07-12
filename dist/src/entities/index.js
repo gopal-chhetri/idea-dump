@@ -21,6 +21,8 @@ __exportStar(require("./refresh-token.entity"), exports);
 __exportStar(require("./cv-profile.entity"), exports);
 __exportStar(require("./cv-skill.entity"), exports);
 __exportStar(require("./idea.entity"), exports);
+__exportStar(require("./role.entity"), exports);
+__exportStar(require("./idea-status.entity"), exports);
 __exportStar(require("./idea-score.entity"), exports);
 __exportStar(require("./idea-rank-override.entity"), exports);
 __exportStar(require("./daily-idea-quota.entity"), exports);

@@ -12,7 +12,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UpdateIdeaDto = exports.CreateIdeaDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
-const enums_1 = require("../../entities/enums");
 class CreateIdeaDto {
     title;
     description;
@@ -95,11 +94,10 @@ __decorate([
 ], UpdateIdeaDto.prototype, "useCase", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
-        enum: enums_1.IdeaStatus,
-        example: enums_1.IdeaStatus.ACTIVE,
-        description: 'Workflow status of the idea',
+        example: 'in_progress',
+        description: 'Workflow status value of the idea (draft, in_progress, completed, archived)',
     }),
-    (0, class_validator_1.IsEnum)(enums_1.IdeaStatus),
+    (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], UpdateIdeaDto.prototype, "status", void 0);

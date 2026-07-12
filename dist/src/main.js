@@ -24,16 +24,12 @@ async function bootstrap() {
     httpAdapter.get('/health', (_req, res) => {
         res.status(200).json({ status: 'ok' });
     });
-    app.useStaticAssets((0, node_path_1.join)(process.cwd(), 'frontend'), { prefix: '/app' });
-    app.useStaticAssets((0, node_path_1.join)(process.cwd(), 'admin'), { prefix: '/admin' });
+    app.useStaticAssets((0, node_path_1.join)(process.cwd(), 'app'), { prefix: '/app' });
     httpAdapter.get('/', (_req, res) => {
         res.redirect('/app/');
     });
     httpAdapter.get('/app', (_req, res) => {
         res.redirect('/app/');
-    });
-    httpAdapter.get('/admin', (_req, res) => {
-        res.redirect('/admin/');
     });
     app.useGlobalPipes(new common_1.ValidationPipe({
         whitelist: true,
@@ -58,5 +54,5 @@ async function bootstrap() {
     });
     await app.listen(process.env.PORT ?? 3000);
 }
-bootstrap();
+void bootstrap();
 //# sourceMappingURL=main.js.map

@@ -8,6 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.LoggingInterceptor = void 0;
 const common_1 = require("@nestjs/common");
+const rxjs_1 = require("rxjs");
 const operators_1 = require("rxjs/operators");
 let LoggingInterceptor = class LoggingInterceptor {
     logger = new common_1.Logger('HTTP');
@@ -22,6 +23,15 @@ let LoggingInterceptor = class LoggingInterceptor {
         return next.handle().pipe((0, operators_1.tap)(() => {
             const statusCode = response.statusCode;
             this.logger.log(`${method} ${url} -> ${statusCode} (${Date.now() - startedAt}ms)`);
+        }), (0, operators_1.catchError)((err) => {
+            const statusCode = err instanceof common_1.HttpException ? err.getStatus() : 500;
+            const elapsed = Date.now() - startedAt;
+            const msg = `${method} ${url} -> ${statusCode} (${elapsed}ms)`;
+            if (statusCode >= 500)
+                this.logger.error(msg);
+            else
+                this.logger.warn(msg);
+            return (0, rxjs_1.throwError)(() => err);
         }));
     }
 };

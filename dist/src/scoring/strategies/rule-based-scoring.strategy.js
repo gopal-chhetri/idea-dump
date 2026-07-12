@@ -9,11 +9,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.RuleBasedScoringStrategy = void 0;
 const common_1 = require("@nestjs/common");
 let RuleBasedScoringStrategy = class RuleBasedScoringStrategy {
-    async score(idea, profile, userIdeas) {
+    score(idea, profile, userIdeas) {
         const fitScore = this.computeFitScore(idea, profile);
         const effortScore = this.computeEffortScore(idea);
         const noveltyScore = this.computeNoveltyScore(idea, userIdeas);
-        return { fitScore, effortScore, noveltyScore };
+        return Promise.resolve({ fitScore, effortScore, noveltyScore });
     }
     computeFitScore(idea, profile) {
         const skills = profile.skills?.getItems() ?? [];

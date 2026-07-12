@@ -6,8 +6,13 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import type { Request } from 'express';
 import { UserRole } from '../../entities/enums';
 import { ROLES_KEY } from '../decorators/roles.decorator';
+
+interface RequestWithUser extends Request {
+  user?: { id: string; role?: UserRole };
+}
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -24,8 +29,8 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest();
-    const user = request.user as { id: string; role?: UserRole } | undefined;
+    const request = context.switchToHttp().getRequest<RequestWithUser>();
+    const user = request.user;
 
     if (!user) {
       throw new UnauthorizedException('Authentication required');

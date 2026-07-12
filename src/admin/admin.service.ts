@@ -1,14 +1,10 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-} from '@nestjs/common';
+import { Injectable, ConflictException } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/postgresql';
 import * as crypto from 'node:crypto';
 import { User } from '../entities/user.entity';
 import { Idea } from '../entities/idea.entity';
+import { Role } from '../entities/role.entity';
 import { SystemSetting } from '../entities/system-setting.entity';
-import { UserRole } from '../entities/enums';
 import { ScoringService } from '../scoring/scoring.service';
 
 const ENCRYPTION_KEY =
@@ -29,7 +25,7 @@ export class AdminService {
   async getStats() {
     const userCount = await this.em.count(User, {});
     const ideaCount = await this.em.count(Idea, {});
-    const adminCount = await this.em.count(User, { role: UserRole.ADMIN });
+    const adminCount = await this.em.count(User, { role: { value: 'admin' } });
     return { userCount, adminCount, ideaCount };
   }
 
@@ -41,43 +37,80 @@ export class AdminService {
       User,
       {},
       {
+        populate: ['role'],
         orderBy: { createdAt: 'DESC' },
         limit,
         offset,
       },
     );
-    return { users, total, page, limit };
+    return {
+      users: users.map((u) => ({
+        id: u.id,
+        email: u.email,
+        role: u.role.value,
+        createdAt: u.createdAt,
+      })),
+      total,
+      page,
+      limit,
+    };
   }
 
   async getUser(userId: string) {
-    const user = await this.em.findOne(User, { id: userId });
-    if (!user) throw new NotFoundException('User not found');
-    return user;
+    const user = await this.em.findOneOrFail(
+      User,
+      { id: userId },
+      { populate: ['role'] },
+    );
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role.value,
+      createdAt: user.createdAt,
+    };
   }
 
   async createUser(data: {
     email: string;
     passwordHash?: string;
-    role?: UserRole;
+    role?: string;
   }) {
     const existing = await this.em.findOne(User, { email: data.email });
     if (existing) throw new ConflictException('Email already in use');
+    const roleValue = data.role ?? 'user';
+    const role = await this.em.findOneOrFail(Role, { value: roleValue });
     const user = this.em.create(User, {
       email: data.email,
       passwordHash: data.passwordHash,
-      role: data.role ?? UserRole.USER,
+      role,
     });
     this.em.persist(user);
     await this.em.flush();
-    return user;
+    return {
+      id: user.id,
+      email: user.email,
+      role: role.value,
+      createdAt: user.createdAt,
+    };
   }
 
-  async updateUser(userId: string, data: { email?: string; role?: UserRole }) {
-    const user = await this.em.findOneOrFail(User, { id: userId });
+  async updateUser(userId: string, data: { email?: string; role?: string }) {
+    const user = await this.em.findOneOrFail(
+      User,
+      { id: userId },
+      { populate: ['role'] },
+    );
     if (data.email !== undefined) user.email = data.email;
-    if (data.role !== undefined) user.role = data.role;
+    if (data.role !== undefined) {
+      user.role = await this.em.findOneOrFail(Role, { value: data.role });
+    }
     await this.em.flush();
-    return user;
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role.value,
+      createdAt: user.createdAt,
+    };
   }
 
   async deleteUser(userId: string) {
@@ -95,13 +128,34 @@ export class AdminService {
       Idea,
       {},
       {
-        populate: ['scores', 'rankOverride', 'user'],
+        populate: ['scores', 'rankOverride', 'user', 'status'],
         orderBy: { createdAt: 'DESC' },
         limit,
         offset,
       },
     );
-    return { ideas, total, page, limit };
+    return {
+      ideas: ideas.map((idea) => ({
+        id: idea.id,
+        title: idea.title,
+        status: idea.status.value,
+        user: idea.user ? { id: idea.user.id, email: idea.user.email } : null,
+        scores:
+          idea.scores && idea.scores.length
+            ? idea.scores.map((s) => ({
+                finalScore: s.finalScore,
+                fitScore: s.fitScore,
+                effortScore: s.effortScore,
+                noveltyScore: s.noveltyScore,
+                scoringMethod: s.scoringMethod,
+              }))
+            : [],
+        createdAt: idea.createdAt,
+      })),
+      total,
+      page,
+      limit,
+    };
   }
 
   async deleteIdea(ideaId: string) {

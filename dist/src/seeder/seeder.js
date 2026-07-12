@@ -35,17 +35,35 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const core_1 = require("@nestjs/core");
 const app_module_1 = require("../app.module");
+const postgresql_1 = require("@mikro-orm/postgresql");
 const bcrypt = __importStar(require("bcrypt"));
 const users_service_1 = require("../users/users.service");
 const cv_profile_service_1 = require("../cv-profile/cv-profile.service");
 const ideas_service_1 = require("../ideas/ideas.service");
 const scoring_service_1 = require("../scoring/scoring.service");
 const enums_1 = require("../entities/enums");
+const role_entity_1 = require("../entities/role.entity");
+const idea_status_entity_1 = require("../entities/idea-status.entity");
 const DEMO_EMAIL = 'user@gmail.com';
 const DEMO_PASSWORD = 'password123';
 const ADMIN_EMAIL = 'admin@gmail.com';
 const ADMIN_PASSWORD = 'password123';
 const SALT_ROUNDS = 12;
+const ROLES = [
+    { value: 'user', name: 'User', isDefault: true },
+    { value: 'admin', name: 'Admin', isDefault: false },
+];
+const IDEA_STATUSES = [
+    { value: 'draft', label: 'Draft', sortOrder: 1, isDefault: true },
+    {
+        value: 'in_progress',
+        label: 'In Progress',
+        sortOrder: 2,
+        isDefault: false,
+    },
+    { value: 'completed', label: 'Completed', sortOrder: 3, isDefault: false },
+    { value: 'archived', label: 'Archived', sortOrder: 4, isDefault: false },
+];
 const DEMO_SKILLS = [
     { name: 'TypeScript', category: enums_1.SkillCategory.LANGUAGE, weight: 5 },
     { name: 'NestJS', category: enums_1.SkillCategory.FRAMEWORK, weight: 5 },
@@ -90,10 +108,26 @@ const DEMO_IDEAS = [
 ];
 async function bootstrap() {
     const app = await core_1.NestFactory.createApplicationContext(app_module_1.AppModule);
+    const em = app.get(postgresql_1.EntityManager);
     const usersService = app.get(users_service_1.UsersService);
     const cvProfileService = app.get(cv_profile_service_1.CvProfileService);
     const ideasService = app.get(ideas_service_1.IdeasService);
     const scoringService = app.get(scoring_service_1.ScoringService);
+    for (const r of ROLES) {
+        const existing = await em.findOne(role_entity_1.Role, { value: r.value });
+        if (!existing) {
+            em.persist(em.create(role_entity_1.Role, r));
+            console.log(`Seeded role: ${r.value}`);
+        }
+    }
+    for (const s of IDEA_STATUSES) {
+        const existing = await em.findOne(idea_status_entity_1.IdeaStatus, { value: s.value });
+        if (!existing) {
+            em.persist(em.create(idea_status_entity_1.IdeaStatus, s));
+            console.log(`Seeded idea status: ${s.value}`);
+        }
+    }
+    await em.flush();
     try {
         const seedUser = async (email, password, role) => {
             const existing = await usersService.findByEmail(email);
@@ -106,8 +140,8 @@ async function bootstrap() {
             console.log(`Created ${role} ${user.email} (${user.id})`);
             return user;
         };
-        const demo = await seedUser(DEMO_EMAIL, DEMO_PASSWORD, enums_1.UserRole.USER);
-        await seedUser(ADMIN_EMAIL, ADMIN_PASSWORD, enums_1.UserRole.ADMIN);
+        const demo = await seedUser(DEMO_EMAIL, DEMO_PASSWORD, 'user');
+        await seedUser(ADMIN_EMAIL, ADMIN_PASSWORD, 'admin');
         const existingProfile = await cvProfileService.getProfile(demo.id);
         if (!existingProfile) {
             const profile = await cvProfileService.upsertProfile(demo.id, 'Full-stack engineer with strong experience in TypeScript, NestJS, and PostgreSQL. ' +
@@ -127,12 +161,13 @@ async function bootstrap() {
             console.log('Demo user CV profile already exists. Skipping CV + ideas.');
         }
         console.log('\nSeeding complete.');
-        console.log(`  user:  ${DEMO_EMAIL} / ${DEMO_PASSWORD} (${enums_1.UserRole.USER})`);
-        console.log(`  admin: ${ADMIN_EMAIL} / ${ADMIN_PASSWORD} (${enums_1.UserRole.ADMIN})`);
+        console.log(`  user:  ${DEMO_EMAIL} / ${DEMO_PASSWORD} (user)`);
+        console.log(`  admin: ${ADMIN_EMAIL} / ${ADMIN_PASSWORD} (admin)`);
     }
     finally {
         await app.close();
     }
+    process.exit(0);
 }
 bootstrap().catch((err) => {
     console.error('Seeding failed:', err);

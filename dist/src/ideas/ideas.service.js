@@ -14,22 +14,32 @@ const common_1 = require("@nestjs/common");
 const postgresql_1 = require("@mikro-orm/postgresql");
 const idea_entity_1 = require("../entities/idea.entity");
 const user_entity_1 = require("../entities/user.entity");
+const idea_status_entity_1 = require("../entities/idea-status.entity");
 const daily_idea_quota_entity_1 = require("../entities/daily-idea-quota.entity");
-const enums_1 = require("../entities/enums");
+const DEFAULT_STATUS = 'draft';
 let IdeasService = class IdeasService {
     em;
     constructor(em) {
         this.em = em;
     }
+    async resolveStatus(value) {
+        const status = await this.em.findOne(idea_status_entity_1.IdeaStatus, { value });
+        if (!status) {
+            throw new common_1.NotFoundException(`Unknown idea status: ${value}`);
+        }
+        return status;
+    }
     async create(userId, data) {
         const user = await this.em.findOneOrFail(user_entity_1.User, { id: userId });
+        const status = (await this.em.findOne(idea_status_entity_1.IdeaStatus, { isDefault: true })) ??
+            (await this.resolveStatus(DEFAULT_STATUS));
         const idea = this.em.create(idea_entity_1.Idea, {
             user,
             title: data.title,
             description: data.description,
             features: data.features ?? [],
             useCase: data.useCase,
-            status: enums_1.IdeaStatus.INBOX,
+            status,
         });
         this.em.persist(idea);
         await this.updateQuota(userId);
@@ -38,12 +48,12 @@ let IdeasService = class IdeasService {
     }
     async findAllByUser(userId) {
         return this.em.find(idea_entity_1.Idea, { user: userId }, {
-            populate: ['scores', 'rankOverride'],
+            populate: ['scores', 'rankOverride', 'status'],
             orderBy: { createdAt: 'DESC' },
         });
     }
     async findOne(userId, ideaId) {
-        const idea = await this.em.findOne(idea_entity_1.Idea, { id: ideaId }, { populate: ['scores', 'rankOverride'] });
+        const idea = await this.em.findOne(idea_entity_1.Idea, { id: ideaId }, { populate: ['scores', 'rankOverride', 'status'] });
         if (!idea)
             throw new common_1.NotFoundException('Idea not found');
         this.assertOwnership(idea, userId);
@@ -60,7 +70,7 @@ let IdeasService = class IdeasService {
         if (data.useCase !== undefined)
             idea.useCase = data.useCase;
         if (data.status !== undefined)
-            idea.status = data.status;
+            idea.status = await this.resolveStatus(data.status);
         await this.em.flush();
         return idea;
     }
