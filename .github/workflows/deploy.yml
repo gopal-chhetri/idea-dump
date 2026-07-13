@@ -116,7 +116,10 @@ jobs:
             echo "$REGISTRY_PASSWORD" | docker login ghcr.io -u "$REGISTRY_USERNAME" --password-stdin
             chmod +x deploy.sh
             IMAGE_TAG="${{ steps.tag.outputs.tag }}"
-            export INFISICAL_CLIENT_ID="${{ secrets.INFISICAL_CLIENT_ID }}"
-            export INFISICAL_CLIENT_SECRET="${{ secrets.INFISICAL_CLIENT_SECRET }}"
-            export INFISICAL_PROJECT_ID="${{ vars.INFISICAL_PROJECT_ID }}"
+            export INFISICAL_TOKEN=$(infisical login \
+              --method=universal-auth \
+              --client-id="${{ secrets.INFISICAL_CLIENT_ID }}" \
+              --client-secret="${{ secrets.INFISICAL_CLIENT_SECRET }}" \
+              --silent \
+              --plain)
             infisical run --env=prod -- ./deploy.sh "${IMAGE_TAG}"
