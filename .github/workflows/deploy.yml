@@ -122,4 +122,5 @@ jobs:
               --client-secret="${{ secrets.INFISICAL_CLIENT_SECRET }}" \
               --silent \
               --plain)
+            export INFISICAL_PROJECT_ID="${{ vars.INFISICAL_PROJECT_ID }}"
             infisical run --env=prod -- ./deploy.sh "${IMAGE_TAG}"
