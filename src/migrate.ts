@@ -1,5 +1,6 @@
 import { MikroORM } from '@mikro-orm/core';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
+import * as entities from './entities';
 
 async function main() {
   const orm = await MikroORM.init<PostgreSqlDriver>({
@@ -9,7 +10,7 @@ async function main() {
     port: Number(process.env.DB_PORT) || 5432,
     user: process.env.DB_USER || 'postgres',
     password: process.env.DB_PASS || 'password',
-    entities: [],
+    entities: Object.values(entities).filter((x) => typeof x === 'function') as any,
     migrations: {
       path: './dist/migrations',
       pathTs: './src/migrations',
