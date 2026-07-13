@@ -291,7 +291,7 @@
    Icon-only collapsed sidebar.
    =========================================================== */
 @media (min-width: 768px) and (max-width: 1024px) {
-  .glass-nav { width: 95%; padding: 0.85rem 1.5rem; min-height: 56px; }
+  .glass-nav { left: calc(var(--sidebar-w) + 1rem); right: 1rem; width: auto; transform: none; max-width: none; padding: 0.85rem 1.5rem; min-height: 56px; }
   .nav-brand { font-size: 1.1rem; }
   .nav-links { gap: 1rem; }
 
@@ -315,7 +315,7 @@
    Responsive: DESKTOP (> 1024px)
    =========================================================== */
 @media (min-width: 1025px) {
-  .glass-nav { width: 90%; max-width: 1200px; padding: 1rem 1.5rem; min-height: 60px; }
+  .glass-nav { left: calc(var(--sidebar-w) + 1.5rem); right: 1.5rem; width: auto; transform: none; max-width: none; padding: 1rem 1.5rem; min-height: 60px; }
   .nav-brand { font-size: 1.2rem; }
 
   :root { --sidebar-w: 260px; }
@@ -333,6 +333,5 @@
    Responsive: LARGE (> 1440px)
    =========================================================== */
 @media (min-width: 1440px) {
-  .glass-nav { max-width: 1320px; }
-  .main-content { max-width: 1320px; margin-right: auto; margin-left: calc(var(--sidebar-w) + auto); }
+  .main-content { max-width: 1320px; margin-left: var(--sidebar-w); margin-right: auto; }
 }
