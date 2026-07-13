@@ -5,7 +5,7 @@ TAG="${1:-latest}"
 REGISTRY_OWNER="${REGISTRY_OWNER:-gopal-chhetri}"
 IMAGE="ghcr.io/${REGISTRY_OWNER}/idea_dump:${TAG}"
 COMPOSE_DIR="$(cd "$(dirname "$0")" && pwd)"
-TARGET_DIR="/opt/idea_dump"
+TARGET_DIR="/opt/app/idea_dump"
 
 echo "=== Deploying idea_dump:${TAG} ==="
 
