@@ -7,7 +7,7 @@ on:
 
 env:
   REGISTRY_OWNER: ${{ vars.REGISTRY_OWNER || 'gopal-chhetri' }}
-  IMAGE_NAME: idea-prioritizer
+  IMAGE_NAME: idea_dump
 
 jobs:
   ci:
@@ -43,6 +43,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
     steps:
       - uses: actions/checkout@v4
 
@@ -69,31 +70,47 @@ jobs:
             ghcr.io/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.tag }}
             ghcr.io/${{ env.REGISTRY_OWNER }}/${{ env.IMAGE_NAME }}:latest
 
-      - name: Install Infisical CLI
-        run: |
-          curl -1sLf 'https://dl.cloudsmith.io/public/infisical/infisical-cli/setup.deb.sh' | sudo bash
-          sudo apt-get install -y infisical
+      - name: Fetch VPS secrets from Infisical
+        uses: Infisical/secrets-action@v1.0.16
+        with:
+          method: "oidc"
+          identity-id: ${{ vars.INFISICAL_VPS_IDENTITY_ID }}
+          project-slug: ${{ vars.INFISICAL_PROJECT_SLUG }}
+          env-slug: "prod"
+          secret-path: "/"
 
-      - name: SCP deploy files to VPS
-        env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_SSH_USER: ${{ secrets.VPS_SSH_USER }}
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H "${VPS_HOST}" >> ~/.ssh/known_hosts
-          scp deployments/production/compose.yml \
-            deployments/production/deploy.sh \
-            "${VPS_SSH_USER}@${VPS_HOST}:/opt/idea-prioritizer/"
+      - name: Ensure deploy directory permissions
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_SSH_USER }}
+          key: ${{ env.VPS_SSH_KEY }}
+          script: |
+            APP_DIR="/opt/idea_dump"
+            sudo mkdir -p "$APP_DIR"
+            sudo chown -R "$(whoami):$(whoami)" "$APP_DIR"
+
+      - name: Sync deploy files to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_SSH_USER }}
+          key: ${{ env.VPS_SSH_KEY }}
+          source: "deployments/production/compose.yml,deployments/production/deploy.sh"
+          target: "/opt/idea_dump"
+          strip_components: 2
 
       - name: Deploy via SSH
-        env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_SSH_USER: ${{ secrets.VPS_SSH_USER }}
-        run: |
-          ssh "${VPS_SSH_USER}@${VPS_HOST}" \
-            "cd /opt/idea-prioritizer && \
-             REGISTRY_OWNER=${REGISTRY_OWNER} \
-             infisical run --token ${{ secrets.INFISICAL_TOKEN }} -- \
-             ./deploy.sh ${{ steps.tag.outputs.tag }}"
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_SSH_USER }}
+          key: ${{ env.VPS_SSH_KEY }}
+          script: |
+            APP_DIR="/opt/idea_dump"
+            cd "$APP_DIR"
+            chmod +x deploy.sh
+            IMAGE_TAG="${{ steps.tag.outputs.tag }}"
+            REGISTRY_OWNER="${{ env.REGISTRY_OWNER }}" \
+              infisical run --token "${{ secrets.INFISICAL_TOKEN }}" -- \
+              ./deploy.sh "${IMAGE_TAG}"
