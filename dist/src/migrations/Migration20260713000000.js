@@ -4,6 +4,11 @@ exports.Migration20260713000000 = void 0;
 const migrations_1 = require("@mikro-orm/migrations");
 class Migration20260713000000 extends migrations_1.Migration {
     up() {
+        this.addSql(`truncate table "users", "refresh_tokens", "oauth_accounts", "ideas", "idea_scores", "idea_rank_overrides", "daily_idea_quotas", "cv_profiles", "cv_skills" restart identity cascade;`);
+        this.addSql(`alter table "users" drop constraint if exists "users_role_check";`);
+        this.addSql(`alter table "users" drop column if exists "role";`);
+        this.addSql(`alter table "ideas" drop constraint if exists "ideas_status_check";`);
+        this.addSql(`alter table "ideas" drop column if exists "status";`);
         this.addSql(`create table "roles" ("id" uuid not null, "value" varchar(255) not null, "name" varchar(255) null, "is_default" boolean not null default false, "created_at" timestamptz not null, primary key ("id"));`);
         this.addSql(`alter table "roles" add constraint "roles_value_unique" unique ("value");`);
         this.addSql(`create table "idea_status" ("id" uuid not null, "value" varchar(255) not null, "label" varchar(255) null, "sort_order" int not null default 0, "is_default" boolean not null default false, "created_at" timestamptz not null, primary key ("id"));`);
@@ -16,14 +21,9 @@ class Migration20260713000000 extends migrations_1.Migration {
         (gen_random_uuid(), 'in_progress', 'In Progress', 2, false, now()),
         (gen_random_uuid(), 'completed', 'Completed', 3, false, now()),
         (gen_random_uuid(), 'archived', 'Archived', 4, false, now());`);
-        this.addSql(`truncate table "users", "refresh_tokens", "oauth_accounts", "ideas", "idea_scores", "idea_rank_overrides", "daily_idea_quotas", "cv_profiles", "cv_skills" restart identity cascade;`);
         this.addSql(`alter table "users" add column "role_id" uuid not null;`);
-        this.addSql(`alter table "users" drop constraint if exists "users_role_check";`);
-        this.addSql(`alter table "users" drop column "role";`);
         this.addSql(`alter table "users" add constraint "users_role_id_foreign" foreign key ("role_id") references "roles" ("id");`);
         this.addSql(`alter table "ideas" add column "status_id" uuid not null;`);
-        this.addSql(`alter table "ideas" drop constraint if exists "ideas_status_check";`);
-        this.addSql(`alter table "ideas" drop column "status";`);
         this.addSql(`alter table "ideas" add constraint "ideas_status_id_foreign" foreign key ("status_id") references "idea_status" ("id");`);
     }
     down() {

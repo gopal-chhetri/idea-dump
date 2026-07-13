@@ -2,7 +2,23 @@ import { Migration } from '@mikro-orm/migrations';
 
 export class Migration20260713000000 extends Migration {
   override up(): void | Promise<void> {
-    // ── Lookup tables ──────────────────────────────────
+    // ── Clean slate: wipe previous data FIRST ─────────
+    this.addSql(
+      `truncate table "users", "refresh_tokens", "oauth_accounts", "ideas", "idea_scores", "idea_rank_overrides", "daily_idea_quotas", "cv_profiles", "cv_skills" restart identity cascade;`,
+    );
+
+    // ── Drop old columns before creating new tables ───
+    this.addSql(
+      `alter table "users" drop constraint if exists "users_role_check";`,
+    );
+    this.addSql(`alter table "users" drop column if exists "role";`);
+    
+    this.addSql(
+      `alter table "ideas" drop constraint if exists "ideas_status_check";`,
+    );
+    this.addSql(`alter table "ideas" drop column if exists "status";`);
+
+    // ── Create lookup tables ───────────────────────────
     this.addSql(
       `create table "roles" ("id" uuid not null, "value" varchar(255) not null, "name" varchar(255) null, "is_default" boolean not null default false, "created_at" timestamptz not null, primary key ("id"));`,
     );
@@ -32,27 +48,13 @@ export class Migration20260713000000 extends Migration {
         (gen_random_uuid(), 'archived', 'Archived', 4, false, now());`,
     );
 
-    // ── Clean slate: wipe previous data ────────────────
-    this.addSql(
-      `truncate table "users", "refresh_tokens", "oauth_accounts", "ideas", "idea_scores", "idea_rank_overrides", "daily_idea_quotas", "cv_profiles", "cv_skills" restart identity cascade;`,
-    );
-
-    // ── users.role → role_id FK ────────────────────────
+    // ── Add new FK columns ─────────────────────────────
     this.addSql(`alter table "users" add column "role_id" uuid not null;`);
-    this.addSql(
-      `alter table "users" drop constraint if exists "users_role_check";`,
-    );
-    this.addSql(`alter table "users" drop column "role";`);
     this.addSql(
       `alter table "users" add constraint "users_role_id_foreign" foreign key ("role_id") references "roles" ("id");`,
     );
 
-    // ── ideas.status → status_id FK ───────────────────
     this.addSql(`alter table "ideas" add column "status_id" uuid not null;`);
-    this.addSql(
-      `alter table "ideas" drop constraint if exists "ideas_status_check";`,
-    );
-    this.addSql(`alter table "ideas" drop column "status";`);
     this.addSql(
       `alter table "ideas" add constraint "ideas_status_id_foreign" foreign key ("status_id") references "idea_status" ("id");`,
     );
