@@ -17,6 +17,21 @@ export class Migration20260713000000 extends Migration {
       `alter table "idea_status" add constraint "idea_status_value_unique" unique ("value");`,
     );
 
+    // ── Seed lookup data ────────────────────────────────
+    this.addSql(
+      `insert into "roles" ("id", "value", "name", "is_default", "created_at") values 
+        (gen_random_uuid(), 'user', 'User', true, now()),
+        (gen_random_uuid(), 'admin', 'Admin', false, now());`,
+    );
+
+    this.addSql(
+      `insert into "idea_status" ("id", "value", "label", "sort_order", "is_default", "created_at") values 
+        (gen_random_uuid(), 'draft', 'Draft', 1, true, now()),
+        (gen_random_uuid(), 'in_progress', 'In Progress', 2, false, now()),
+        (gen_random_uuid(), 'completed', 'Completed', 3, false, now()),
+        (gen_random_uuid(), 'archived', 'Archived', 4, false, now());`,
+    );
+
     // ── Clean slate: wipe previous data ────────────────
     this.addSql(
       `truncate table "users", "refresh_tokens", "oauth_accounts", "ideas", "idea_scores", "idea_rank_overrides", "daily_idea_quotas", "cv_profiles", "cv_skills" restart identity cascade;`,

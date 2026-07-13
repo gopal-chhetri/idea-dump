@@ -8,6 +8,14 @@ class Migration20260713000000 extends migrations_1.Migration {
         this.addSql(`alter table "roles" add constraint "roles_value_unique" unique ("value");`);
         this.addSql(`create table "idea_status" ("id" uuid not null, "value" varchar(255) not null, "label" varchar(255) null, "sort_order" int not null default 0, "is_default" boolean not null default false, "created_at" timestamptz not null, primary key ("id"));`);
         this.addSql(`alter table "idea_status" add constraint "idea_status_value_unique" unique ("value");`);
+        this.addSql(`insert into "roles" ("id", "value", "name", "is_default", "created_at") values 
+        (gen_random_uuid(), 'user', 'User', true, now()),
+        (gen_random_uuid(), 'admin', 'Admin', false, now());`);
+        this.addSql(`insert into "idea_status" ("id", "value", "label", "sort_order", "is_default", "created_at") values 
+        (gen_random_uuid(), 'draft', 'Draft', 1, true, now()),
+        (gen_random_uuid(), 'in_progress', 'In Progress', 2, false, now()),
+        (gen_random_uuid(), 'completed', 'Completed', 3, false, now()),
+        (gen_random_uuid(), 'archived', 'Archived', 4, false, now());`);
         this.addSql(`truncate table "users", "refresh_tokens", "oauth_accounts", "ideas", "idea_scores", "idea_rank_overrides", "daily_idea_quotas", "cv_profiles", "cv_skills" restart identity cascade;`);
         this.addSql(`alter table "users" add column "role_id" uuid not null;`);
         this.addSql(`alter table "users" drop constraint if exists "users_role_check";`);
