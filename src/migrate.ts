@@ -1,5 +1,6 @@
 import { MikroORM } from '@mikro-orm/core';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
+import { Migrator } from '@mikro-orm/migrations';
 import * as entities from './entities';
 
 async function main() {
@@ -11,6 +12,7 @@ async function main() {
     user: process.env.DB_USER || 'postgres',
     password: process.env.DB_PASS || 'password',
     entities: Object.values(entities).filter((x) => typeof x === 'function') as any,
+    extensions: [Migrator],
     migrations: {
       path: './dist/migrations',
       pathTs: './src/migrations',
