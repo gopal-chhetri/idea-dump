@@ -20,5 +20,5 @@ COPY --from=build /app/dist ./dist
 COPY --from=build /app/app ./app
 EXPOSE 7501
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD-SHELL wget --no-verbose --tries=1 --spider http://localhost:${PORT:-3000}/health || exit 1
+  CMD node -e "const p=process.env.PORT??3000; fetch('http://localhost:'+p+'/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 CMD ["node", "dist/src/main.js"]
