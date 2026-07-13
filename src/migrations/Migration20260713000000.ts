@@ -12,7 +12,7 @@ export class Migration20260713000000 extends Migration {
       `alter table "users" drop constraint if exists "users_role_check";`,
     );
     this.addSql(`alter table "users" drop column if exists "role";`);
-    
+
     this.addSql(
       `alter table "ideas" drop constraint if exists "ideas_status_check";`,
     );

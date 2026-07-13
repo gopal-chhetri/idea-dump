@@ -15,7 +15,9 @@ import * as entities from './entities';
     MikroOrmModule.forRoot({
       driver: PostgreSqlDriver,
       allowGlobalContext: true,
-      entities: Object.values(entities).filter((x) => typeof x === 'function') as any,
+      entities: Object.values(entities).filter(
+        (x) => typeof x === 'function',
+      ) as any,
       dbName: process.env.DB_NAME || 'idea_dump',
       host: process.env.DB_HOST || 'localhost',
       port: Number(process.env.DB_PORT) || 5432,
@@ -23,7 +25,7 @@ import * as entities from './entities';
       password: process.env.DB_PASS || 'password',
       extensions: [Migrator],
       migrations: {
-        path: './dist/migrations',
+        path: './dist/src/migrations',
         pathTs: './src/migrations',
       },
     }),

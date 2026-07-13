@@ -2,6 +2,7 @@ name: idea_dump
 
 services:
   app:
+    container_name: idea_dump_app
     image: ghcr.io/${REGISTRY_OWNER:-gopal-chhetri}/idea_dump:${IMAGE_TAG:-latest}
     restart: unless-stopped
     environment:
@@ -27,6 +28,7 @@ services:
       - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
       - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
       - GITHUB_CALLBACK_URL=${GITHUB_CALLBACK_URL:-}
+      - FRONTEND_URL=${FRONTEND_URL:-https://ideas.soylab.dpdns.org/app}
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik-network"
@@ -53,6 +55,7 @@ services:
         condition: service_healthy
 
   migrate:
+    container_name: idea_dump_migrate
     image: ghcr.io/${REGISTRY_OWNER:-gopal-chhetri}/idea_dump:${IMAGE_TAG:-latest}
     restart: "no"
     environment:
@@ -66,6 +69,7 @@ services:
         condition: service_healthy
 
   postgres:
+    container_name: idea_dump_postgres
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
@@ -83,6 +87,7 @@ services:
       - default
 
   redis:
+    container_name: idea_dump_redis
     image: redis:7-alpine
     restart: unless-stopped
     volumes:

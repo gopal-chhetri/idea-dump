@@ -4,4 +4,5 @@ dist
 .env
 **/*.pem
 deployments/*/.env
+**/*.env.example
 pnpm-debug.log

@@ -20,7 +20,9 @@ async function main() {
     port: Number(process.env.DB_PORT) || 5432,
     user: process.env.DB_USER || 'postgres',
     password: process.env.DB_PASS || 'password',
-    entities: Object.values(entities).filter((x) => typeof x === 'function') as any,
+    entities: Object.values(entities).filter(
+      (x) => typeof x === 'function',
+    ) as any,
     extensions: [Migrator],
     migrations: {
       path: './dist/src/migrations',

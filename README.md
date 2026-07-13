@@ -10,11 +10,11 @@ graph TD
     Developer[Developer] -->|git push| GitHub[GitHub Repository]
 
     subgraph cicd ["CI/CD - GitHub Actions"]
-        GitHub --> CI["CI - Lint and Test"]
+        GitHub --> CI["CI - Lint (non-blocking)"]
         CI --> CD["CD - Build Docker Image"]
         CD --> GHCR[Push to GHCR]
-        CD --> PrepVPS["Ensure VPS directory permissions"]
-        PrepVPS --> SCP["SCP deploy.sh, compose.yml, migrations"]
+         CD --> PrepVPS["Ensure VPS directory permissions"]
+         PrepVPS --> SCP["SCP deploy.sh, compose.yml"]
         SCP --> DeploySSH["SSH - run deploy.sh"]
     end
 
@@ -65,7 +65,7 @@ git clone https://github.com/gopal-chhetri/idea-dump.git
 cd idea-dump
 
 # Start all services (app, database, redis)
-npm run start:dev
+pnpm run start:dev
 
 # Or with Docker Compose directly
 cd deployments/local-dev
@@ -96,9 +96,9 @@ Once running, visit:
 
 ### CI/CD Pipeline
 
-Push to `main` triggers:
-1. **CI**: Lint → Test → Build
-2. **CD**: Build Docker image → Push to GHCR → Ensure VPS permissions → SCP deploy files and root `migrations/` → SSH `deploy.sh` on VPS
+Push to `main` (or a `v*` tag) triggers:
+1. **CI**: Lint (non-blocking) → Build
+2. **CD**: Build Docker image → Push to GHCR → Ensure VPS permissions → SCP copies `compose.yml` + `deploy.sh` (migrations run from the image via the `migrate` service) → SSH `deploy.sh` on VPS
 
 ### Image Versioning
 

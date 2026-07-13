@@ -26,7 +26,7 @@ services:
     image: postgres:16-alpine
     env_file: ./.env
     environment:
-      POSTGRES_DB: ${DB_NAME:-idea_prioritizer}
+      POSTGRES_DB: ${DB_NAME:-idea_dump}
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASS:-postgres}
     ports:

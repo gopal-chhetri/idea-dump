@@ -11,7 +11,7 @@ export default defineConfig({
   password: process.env.DB_PASS || 'password',
   extensions: [Migrator],
   migrations: {
-    path: './dist/migrations',
+    path: './dist/src/migrations',
     pathTs: './src/migrations',
   },
 });

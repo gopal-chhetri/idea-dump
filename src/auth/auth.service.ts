@@ -13,7 +13,8 @@ import { RefreshToken } from '../entities/refresh-token.entity';
 import { OAuthAccount, OAuthProvider } from '../entities';
 
 const SALT_ROUNDS = 12;
-const REFRESH_TOKEN_DAYS = 7;
+const REFRESH_TOKEN_DAYS =
+  parseInt(process.env.JWT_REFRESH_EXPIRY ?? '7', 10) || 7;
 
 @Injectable()
 export class AuthService {
