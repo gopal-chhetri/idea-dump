@@ -29,10 +29,20 @@ services:
       - GITHUB_CALLBACK_URL=${GITHUB_CALLBACK_URL:-}
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.idea_dump.rule=Host(`${DOMAIN:-ideas.soylab.dpdns.org}`)"
-      - "traefik.http.routers.idea_dump.entrypoints=websecure"
-      - "traefik.http.routers.idea_dump.tls.certresolver=letsencrypt"
-      - "traefik.http.services.idea_dump.loadbalancer.server.port=${PORT:-7501}"
+      - "traefik.docker.network=traefik-network"
+      # HTTP config
+      - "traefik.http.routers.idea_dump_http.entrypoints=http"
+      - "traefik.http.routers.idea_dump_http.rule=Host(`${DOMAIN:-ideas.soylab.dpdns.org}`)"
+      # HTTPS config
+      - "traefik.http.routers.idea_dump_https.entrypoints=https"
+      - "traefik.http.routers.idea_dump_https.rule=Host(`${DOMAIN:-ideas.soylab.dpdns.org}`)"
+      - "traefik.http.routers.idea_dump_https.tls=true"
+      - "traefik.http.routers.idea_dump_https.tls.certresolver=le"
+      - "traefik.http.routers.idea_dump_https.service=idea_dump_service"
+      # Service config
+      - "traefik.http.services.idea_dump_service.loadbalancer.server.port=${PORT:-7501}"
+      # HTTPS redirect middleware
+      - "traefik.http.routers.idea_dump_http.middlewares=https-redirect"
     networks:
       - default
       - traefik-network
