@@ -5,7 +5,7 @@ ENV PNPM_CONFIG_MINIMUM_RELEASE_AGE=0
 ENV PNPM_CONFIG_DANGEROUSLY_ALLOW_ALL_BUILDS=true
 WORKDIR /app
 COPY package*.json pnpm-lock.yaml ./
-RUN npm install -g pnpm && pnpm install --frozen-lockfile
+RUN npm install -g pnpm@10 && pnpm install --frozen-lockfile
 COPY . .
 RUN pnpm run build
 
@@ -15,7 +15,7 @@ ENV CI=true
 ENV NODE_ENV=production
 WORKDIR /app
 COPY package*.json pnpm-lock.yaml ./
-RUN npm install -g pnpm && pnpm install --prod --frozen-lockfile
+RUN npm install -g pnpm@10 && pnpm install --prod --frozen-lockfile
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/app ./app
 EXPOSE 7501
