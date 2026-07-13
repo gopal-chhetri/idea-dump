@@ -10,7 +10,7 @@ services:
       - REDIS_HOST=redis
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PASS=${DB_PASS}
       - REDIS_PORT=${REDIS_PORT:-6379}
       - JWT_PRIVATE_KEY=${JWT_PRIVATE_KEY}
       - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY}
@@ -48,7 +48,7 @@ services:
       - DB_HOST=postgres
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PASS=${DB_PASS}
     command: ["node", "dist/src/migrate.js"]
     depends_on:
       postgres:
@@ -60,7 +60,7 @@ services:
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_PASSWORD: ${DB_PASS}
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
