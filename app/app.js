@@ -197,6 +197,31 @@ document.addEventListener('DOMContentLoaded', () => {
     admin: { usersPage: 1, ideasPage: 1 },
   };
 
+  // ── Theme Toggle ──────────────────────────────────────────────────────
+  function getPreferredTheme() {
+    const stored = localStorage.getItem('id_theme');
+    if (stored) return stored;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+
+  function setTheme(theme) {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+    localStorage.setItem('id_theme', theme);
+  }
+
+  function toggleTheme() {
+    const current = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+    setTheme(current === 'dark' ? 'light' : 'dark');
+  }
+
+  function wireThemeToggles() {
+    document.querySelectorAll('.theme-toggle').forEach(btn => {
+      btn.addEventListener('click', toggleTheme);
+    });
+  }
+
+  setTheme(getPreferredTheme());
+
   const $ = id => document.getElementById(id);
   const authCheck = $('auth-check');
   const landingView = $('landing-view');
@@ -304,10 +329,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (online && api.token) {
       state.isAuthenticated = true;
-      authBtn.innerHTML = '<i data-lucide="log-out"></i> Log Out';
+      authBtn.innerHTML = '<i class="ph ph-sign-out"></i> Log Out';
       if (state.currentPage === 'my-backlog') {
         ideasStack.innerHTML = renderSkeletons(3);
-        lucide.createIcons();
+        PhosphorIcons.render();
       }
       try {
         const [profile, ideas] = await Promise.all([
@@ -323,7 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       state.isAuthenticated = online && !!api.token;
       if (!api.token) {
-        authBtn.innerHTML = '<i data-lucide="key-round"></i> Authenticate';
+        authBtn.innerHTML = '<i class="ph ph-key"></i> Authenticate';
       }
     }
 
@@ -342,7 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderSkillsList();
     renderQuota();
     renderIdeas();
-    lucide.createIcons();
+    PhosphorIcons.render();
   }
 
   function renderSkillsList() {
@@ -390,7 +415,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!sorted.length) {
       ideasStack.innerHTML = `
         <div class="empty-state">
-          <i data-lucide="inbox" class="icon-lg"></i>
+          <i class="ph ph-inbox"></i>
           <h3>No ideas captured</h3>
           <p>Submit your first project idea above — the engine will score and rank it instantly.</p>
         </div>`;
@@ -448,7 +473,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <h3>${escapeHtml(idea.title)}</h3>
             <div class="idea-badges">
               <span class="badge badge-status">${escapeHtml(STATUS_LABELS[statusValue(idea.status)] || statusValue(idea.status))}</span>
-              ${isPinned ? `<span class="badge badge-pinned"><i data-lucide="pin" style="width:10px;height:10px;"></i> Pinned</span>` : ''}
+              ${isPinned ? `<span class="badge badge-pinned"><i class="ph ph-pin"></i> Pinned</span>` : ''}
               ${rank ? `<span class="badge badge-pinned">Force #${rank}</span>` : ''}
             </div>
           </div>
@@ -488,14 +513,14 @@ document.addEventListener('DOMContentLoaded', () => {
             data-id="${escapeHtml(idea.id)}"
             data-pinned="${isPinned ? 'true' : 'false'}"
             data-rank="${rank ?? ''}">
-            <i data-lucide="sliders"></i> Force Order
+            <i class="ph ph-sliders"></i> Force Order
           </button>
           ${api.isOnline ? `
           <button class="btn btn-secondary btn-sm rescore-idea-btn" data-id="${escapeHtml(idea.id)}">
-            <i data-lucide="rotate-cw"></i> Rescore
+            <i class="ph ph-arrow-clockwise"></i> Rescore
           </button>` : ''}
           <button class="btn btn-danger btn-sm delete-idea-btn" data-id="${escapeHtml(idea.id)}">
-            <i data-lucide="trash-2"></i>
+            <i class="ph ph-trash"></i>
           </button>
         </div>
       </div>
@@ -551,8 +576,8 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     const submitBtn = ideaForm.querySelector('[type="submit"]');
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> Scoring…';
-    lucide.createIcons();
+    submitBtn.innerHTML = '<span class="ph ph-spinner spin"></span> Scoring…';
+    PhosphorIcons.render();
 
     const title = $('idea-title').value.trim();
     const desc = $('idea-desc').value.trim();
@@ -574,8 +599,8 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast(err.message, 'error');
     } finally {
       submitBtn.disabled = false;
-      submitBtn.innerHTML = '<i data-lucide="plus-circle"></i> Submit & Score Idea';
-      lucide.createIcons();
+      submitBtn.innerHTML = '<i class="ph ph-plus-circle"></i> Submit & Score Idea';
+      PhosphorIcons.render();
     }
 
     await syncApp();
@@ -699,7 +724,7 @@ document.addEventListener('DOMContentLoaded', () => {
       state.email = payload?.email || email;
 
       closeModals();
-      authBtn.innerHTML = '<i data-lucide="log-out"></i> Log Out';
+      authBtn.innerHTML = '<i class="ph ph-sign-out"></i> Log Out';
       populateUserPill();
       showToast('Authenticated successfully', 'success');
       showDashboard();
@@ -798,7 +823,7 @@ document.addEventListener('DOMContentLoaded', () => {
   $('admin-create-user-btn').addEventListener('click', () => {
     adminUserModal.classList.add('active');
     $('admin-user-error').textContent = '';
-    lucide.createIcons();
+    PhosphorIcons.render();
   });
   $('admin-user-form').addEventListener('submit', async e => {
     e.preventDefault();
@@ -958,5 +983,6 @@ document.addEventListener('DOMContentLoaded', () => {
   window.__app = { toggleRole, deleteUser, rescoreAdminIdea, deleteAdminIdea };
 
   // ── Start ──
+  wireThemeToggles();
   bootstrap();
 });

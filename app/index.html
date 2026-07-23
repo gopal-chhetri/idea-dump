@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Idea Dump — A personal command center for capturing, scoring, and ranking your project ideas." />
+  <meta name="description" content="Idea Dump: A personal command center for capturing, scoring, and ranking your project ideas." />
   <title>Idea Dump</title>
   <link rel="icon" type="image/png" sizes="any" href="/app/logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="navbar.css" />
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
   <style>
     .view { display: none; }
     .view.active { display: block; }
@@ -46,7 +46,11 @@
         <a href="#use-cases">Use cases</a>
         <a href="#scoring">Scoring</a>
         <button id="landing-auth-btn" class="btn btn-primary btn-sm">
-          <i data-lucide="key-round"></i> Sign In
+          <i class="ph ph-key"></i> Sign In
+        </button>
+        <button id="theme-toggle-landing" class="theme-toggle" title="Toggle theme">
+          <i class="ph ph-moon"></i>
+          <i class="ph ph-sun"></i>
         </button>
       </div>
     </nav>
@@ -65,10 +69,10 @@
       </p>
       <div class="cta-row">
         <button id="landing-cta-btn" class="btn btn-primary">
-          <i data-lucide="rocket"></i> Get Started
+          <i class="ph ph-rocket"></i> Get Started
         </button>
         <a href="#about" class="btn btn-secondary">
-          <i data-lucide="info"></i> Learn More
+          <i class="ph ph-info"></i> Learn More
         </a>
       </div>
     </section>
@@ -81,11 +85,11 @@
       <div class="grid-2">
         <div class="feature-card glass">
           <h3>The Problem</h3>
-          <p>You have dozens of project ideas — a real-time editor, an AI code review bot, a self-hosted analytics pipeline. But which one aligns best with your current skills? Which is worth the effort? Without data, you pick arbitrarily or get stuck in analysis paralysis.</p>
+          <p>You have dozens of project ideas: a real-time editor, an AI code review bot, a self-hosted analytics pipeline. But which one aligns best with your current skills? Which is worth the effort? Without data, you pick arbitrarily or get stuck in analysis paralysis.</p>
         </div>
         <div class="feature-card glass">
           <h3>The Solution</h3>
-          <p>Idea Dump lets you dump every idea freely, then automatically scores each one against your <strong>CV profile</strong> — your skills, categories, and proficiency weights. The result is a ranked backlog ordered by CV-fit, estimated effort, and novelty. No spreadsheets, no gut-feel.</p>
+          <p>Idea Dump lets you dump every idea freely, then automatically scores each one against your <strong>CV profile</strong>: your skills, categories, and proficiency weights. The result is a ranked backlog ordered by CV-fit, estimated effort, and novelty. No spreadsheets, no gut-feel.</p>
         </div>
       </div>
     </section>
@@ -104,7 +108,7 @@
         <div class="step glass">
           <div class="num">02</div>
           <h3>Dump your ideas</h3>
-          <p>Submit project ideas with title, description, key features, and target use case. Each idea is automatically scored the moment you submit it — no manual review needed.</p>
+          <p>Submit project ideas with title, description, key features, and target use case. Each idea is automatically scored the moment you submit it - no manual review needed.</p>
         </div>
         <div class="step glass">
           <div class="num">03</div>
@@ -121,17 +125,17 @@
       </div>
       <div class="grid-3">
         <div class="feature-card glass">
-          <div class="ico"><i data-lucide="user"></i></div>
+          <div class="ico"><i class="ph ph-user"></i></div>
           <h3>Portfolio builders</h3>
           <p>You're building projects to showcase for job applications. Score each idea against your current skill stack and pick the one that maximises learning impact while staying feasible.</p>
         </div>
         <div class="feature-card glass">
-          <div class="ico"><i data-lucide="users"></i></div>
+          <div class="ico"><i class="ph ph-users"></i></div>
           <h3>Indie makers</h3>
           <p>You have a backlog of SaaS ideas but limited time. Let the engine surface the idea with the best skill-fit so you ship faster instead of second-guessing.</p>
         </div>
         <div class="feature-card glass">
-          <div class="ico"><i data-lucide="graduation-cap"></i></div>
+          <div class="ico"><i class="ph ph-graduation-cap"></i></div>
           <h3>Career switchers</h3>
           <p>You're moving into a new tech stack and want to build projects that reinforce your new skills. Update your CV profile and the scoring automatically adapts.</p>
         </div>
@@ -141,7 +145,7 @@
     <section id="scoring" class="section container">
       <div class="section-head">
         <h2>How scoring works</h2>
-        <p>Transparent, deterministic, and explainable — no black box.</p>
+        <p>Transparent, deterministic, and explainable; no black box.</p>
       </div>
       <div class="grid-3">
         <div class="feature-card glass">
@@ -191,7 +195,7 @@
         <h2>Stop guessing. Start building.</h2>
         <p>Register in seconds, build your CV profile, and let the engine rank your ideas.</p>
         <button id="landing-footer-cta" class="btn btn-primary">
-          <i data-lucide="rocket"></i> Launch the App
+          <i class="ph ph-rocket"></i> Launch the App
         </button>
       </div>
     </section>
@@ -203,7 +207,7 @@
   </div>
 
   <!-- ════════════════════════════════════════════════════════════════
-       DASHBOARD VIEW (authenticated) — app shell
+       DASHBOARD VIEW (authenticated) - app shell
        ════════════════════════════════════════════════════════════════ -->
   <div id="dashboard-view" class="view">
 
@@ -220,15 +224,19 @@
             <span class="indicator"></span>
             <span class="label">Mock Mode</span>
           </div>
+          <button id="theme-toggle-dash" class="theme-toggle" title="Toggle theme">
+            <i class="ph ph-moon"></i>
+            <i class="ph ph-sun"></i>
+          </button>
           <button id="auth-btn" class="btn btn-secondary btn-sm">
-            <i data-lucide="key-round"></i> Authenticate
+            <i class="ph ph-key"></i> Authenticate
           </button>
         </div>
       </nav>
 
       <!-- Mobile sidebar toggle -->
       <button id="mobile-menu-toggle" class="mobile-menu-toggle">
-        <i data-lucide="menu"></i>
+        <i class="ph ph-list"></i>
       </button>
 
       <!-- Mobile sidebar overlay -->
@@ -242,23 +250,20 @@
         </div>
         <nav class="sidebar-nav">
           <a href="#" class="nav-item active" data-view="my-backlog">
-            <i data-lucide="lightbulb" class="nav-icon"></i> <span>My Backlog</span>
+            <i class="ph ph-lightbulb"></i> <span>My Backlog</span>
           </a>
           <a href="#" class="nav-item" data-view="cv-profile">
-            <i data-lucide="user" class="nav-icon"></i> <span>CV Profile</span>
+            <i class="ph ph-user"></i> <span>CV Profile</span>
           </a>
           <a href="#" class="nav-item" data-view="skills">
-            <i data-lucide="award" class="nav-icon"></i> <span>Skills</span>
+            <i class="ph ph-trophy"></i> <span>Skills</span>
           </a>
           <a href="#" class="nav-item admin-only" data-view="admin-users">
-            <i data-lucide="users" class="nav-icon"></i> <span>Users</span>
+            <i class="ph ph-users"></i> <span>Users</span>
           </a>
           <a href="#" class="nav-item admin-only" data-view="admin-ideas">
-            <i data-lucide="layers" class="nav-icon"></i> <span>Ideas</span>
+            <i class="ph ph-stack"></i> <span>Ideas</span>
           </a>
-          <!-- <a href="#" class="nav-item admin-only" data-view="admin-settings">
-            <i data-lucide="settings" class="nav-icon"></i> <span>Settings</span>
-          </a> -->
         </nav>
         <div class="sidebar-footer">
           <div class="user-pill">
@@ -269,7 +274,7 @@
             </div>
           </div>
           <button class="btn btn-ghost btn-sm btn-full" id="sidebar-logout">
-            <i data-lucide="log-out" class="icon-sm"></i> <span>Terminate Session</span>
+            <i class="ph ph-sign-out"></i> <span>Terminate Session</span>
           </button>
         </div>
       </aside>
@@ -281,7 +286,7 @@
         <section id="page-my-backlog" class="page active">
           <section class="card submission-card">
             <div class="card-header">
-              <i data-lucide="lightbulb"></i>
+              <i class="ph ph-lightbulb"></i>
               <h2>Capture Project Idea</h2>
               <span class="quota-counter" id="quota-display">Quota: 2 / 2 remaining</span>
             </div>
@@ -314,7 +319,7 @@
                 <textarea id="idea-usecase" placeholder="Who benefits from this? How does it demonstrate your engineering capability?..." required></textarea>
               </div>
               <button type="submit" class="btn btn-primary">
-                <i data-lucide="plus-circle"></i> Submit & Score Idea
+                <i class="ph ph-plus-circle"></i> Submit & Score Idea
               </button>
             </form>
           </section>
@@ -322,16 +327,16 @@
           <section class="ideas-deck">
             <div class="deck-header">
               <div class="deck-title-group">
-                <i data-lucide="trending-up"></i>
+                <i class="ph ph-trend-up"></i>
                 <h2>Prioritized Backlog</h2>
               </div>
               <button id="rescore-all-btn" class="btn btn-secondary btn-sm" style="display:none">
-                <i data-lucide="rotate-cw"></i> Rescore Backlog
+                <i class="ph ph-arrow-clockwise"></i> Rescore Backlog
               </button>
             </div>
             <div id="ideas-stack" class="stack-layout">
               <div class="empty-state">
-                <i data-lucide="inbox" class="icon-lg"></i>
+                <i class="ph ph-inbox"></i>
                 <h3>No ideas captured</h3>
                 <p>Your prioritized backlog will formulate once you submit your first project idea.</p>
               </div>
@@ -347,7 +352,7 @@
           </header>
           <section class="card cv-profile-card">
             <div class="card-header">
-              <i data-lucide="user"></i>
+              <i class="ph ph-user"></i>
               <h2>Professional Summary</h2>
             </div>
             <div class="card-body">
@@ -368,10 +373,10 @@
           </header>
           <section class="card cv-skills-card">
             <div class="card-header">
-              <i data-lucide="award"></i>
+              <i class="ph ph-trophy"></i>
               <h2>Core Skills</h2>
               <button id="add-skill-trigger" class="btn btn-icon" title="Add skill">
-                <i data-lucide="plus"></i>
+                <i class="ph ph-plus"></i>
               </button>
             </div>
             <div class="card-body">
@@ -397,7 +402,7 @@
           <div class="section-head">
             <h3>Identity Directory</h3>
             <div class="section-actions">
-              <button id="admin-create-user-btn" class="btn btn-primary btn-sm"><i data-lucide="user-plus"></i> Create User</button>
+              <button id="admin-create-user-btn" class="btn btn-primary btn-sm"><i class="ph ph-user-plus"></i> Create User</button>
               <button id="admin-users-prev" class="btn btn-secondary btn-sm">Prev</button>
               <span id="admin-users-page" class="page-info">Page 1</span>
               <button id="admin-users-next" class="btn btn-secondary btn-sm">Next</button>
@@ -423,7 +428,7 @@
           <div class="section-head">
             <h3>All Ideas</h3>
             <div class="section-actions">
-              <button id="admin-rescore-all-btn" class="btn btn-secondary btn-sm"><i data-lucide="rotate-cw"></i> Rescore All</button>
+              <button id="admin-rescore-all-btn" class="btn btn-secondary btn-sm"><i class="ph ph-arrow-clockwise"></i> Rescore All</button>
               <button id="admin-ideas-prev" class="btn btn-secondary btn-sm">Prev</button>
               <span id="admin-ideas-page" class="page-info">Page 1</span>
               <button id="admin-ideas-next" class="btn btn-secondary btn-sm">Next</button>
@@ -462,7 +467,7 @@
     <div class="modal-card">
       <div class="modal-header">
         <h2>Add CV Skill</h2>
-        <button class="modal-close"><i data-lucide="x"></i></button>
+        <button class="modal-close"><i class="ph ph-x"></i></button>
       </div>
       <form id="skill-form" class="modal-body">
         <div class="form-group">
@@ -494,7 +499,7 @@
     <div class="modal-card">
       <div class="modal-header">
         <h2>Force Ordering Settings</h2>
-        <button class="modal-close"><i data-lucide="x"></i></button>
+        <button class="modal-close"><i class="ph ph-x"></i></button>
       </div>
       <form id="rank-form" class="modal-body">
         <input type="hidden" id="rank-idea-id" />
@@ -518,7 +523,7 @@
     <div class="modal-card">
       <div class="modal-header">
         <h2 id="auth-modal-title">Sign In to Engine</h2>
-        <button class="modal-close"><i data-lucide="x"></i></button>
+        <button class="modal-close"><i class="ph ph-x"></i></button>
       </div>
       <div class="modal-body">
         <div class="auth-tabs">
@@ -538,8 +543,8 @@
         </form>
         <div class="auth-divider"><span>Or authenticate via OAuth</span></div>
         <div class="oauth-buttons">
-          <button id="google-auth-btn" class="btn btn-secondary"><i data-lucide="chrome"></i> Google</button>
-          <button id="github-auth-btn" class="btn btn-secondary"><i data-lucide="github"></i> GitHub</button>
+          <button id="google-auth-btn" class="btn btn-secondary"><i class="ph ph-browser"></i> Google</button>
+          <button id="github-auth-btn" class="btn btn-secondary"><i class="ph ph-github-logo"></i> GitHub</button>
         </div>
       </div>
     </div>
@@ -550,7 +555,7 @@
     <div class="modal-card">
       <div class="modal-header">
         <h2>Create User</h2>
-        <button class="modal-close"><i data-lucide="x"></i></button>
+        <button class="modal-close"><i class="ph ph-x"></i></button>
       </div>
       <form id="admin-user-form" class="modal-body">
         <div class="form-group">
