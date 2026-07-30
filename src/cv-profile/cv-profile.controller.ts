@@ -8,7 +8,10 @@ import {
   Param,
   UseGuards,
   Req,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import type { Request } from 'express';
 import {
   ApiTags,
@@ -16,6 +19,8 @@ import {
   ApiOperation,
   ApiParam,
   ApiResponse,
+  ApiConsumes,
+  ApiBody,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CvProfileService } from './cv-profile.service';
@@ -86,5 +91,46 @@ export class CvProfileController {
   async removeSkill(@Req() req: Request, @Param('id') skillId: string) {
     const userId = (req.user as { id: string }).id;
     return this.cvProfileService.removeSkill(userId, skillId);
+  }
+
+  @Post('upload')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({
+    summary: 'Upload CV file',
+    description:
+      'Upload a PDF or TXT file to extract professional summary and skills via text parsing.',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'PDF or TXT file containing CV/resume content',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Extracted summary and skills from the uploaded file.',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Unsupported file type or empty file.',
+  })
+  async uploadCv(
+    @Req() req: Request,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    const userId = (req.user as { id: string }).id;
+    return this.cvProfileService.uploadAndExtract(
+      userId,
+      file.buffer,
+      file.mimetype,
+      file.originalname,
+    );
   }
 }

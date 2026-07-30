@@ -60,6 +60,38 @@ class ApiClient {
     return payload.data ?? payload;
   }
 
+  async uploadFile(path, file) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const headers = {};
+    if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
+
+    let response = await fetch(`${this.baseUrl}${path}`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    if (response.status === 401 && this.refreshToken) {
+      const refreshed = await this._attemptRefresh();
+      if (refreshed) {
+        headers['Authorization'] = `Bearer ${this.token}`;
+        response = await fetch(`${this.baseUrl}${path}`, {
+          method: 'POST',
+          headers,
+          body: formData,
+        });
+      }
+    }
+
+    let payload;
+    try { payload = await response.json(); } catch { payload = {}; }
+
+    if (!response.ok) throw new Error(payload.message || `Upload failed (${response.status})`);
+    return payload.data ?? payload;
+  }
+
   async _attemptRefresh() {
     try {
       const res = await fetch(`${this.baseUrl}/auth/refresh`, {
@@ -247,6 +279,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const skillForm = $('skill-form');
   const rankForm = $('rank-form');
   const authForm = $('auth-form');
+  const cvFileInput = $('cv-file-input');
+  const cvUploadZone = $('cv-upload-zone');
+  const cvUploadStatus = $('cv-upload-status');
 
   // ── View switching ──────────────────────────────────────────────────────
   function showLanding() {
@@ -570,6 +605,50 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     showToast('Profile summary saved', 'success');
     await syncApp();
+  });
+
+  // ── CV File Upload ─────────────────────────────────────────────────────
+  function handleCvFile(file) {
+    if (!file) return;
+    const validTypes = ['application/pdf', 'text/plain'];
+    const validExt = /\.(pdf|txt)$/i;
+    if (!validTypes.includes(file.type) && !validExt.test(file.name)) {
+      showToast('Please upload a PDF or TXT file.', 'error');
+      return;
+    }
+    cvUploadStatus.textContent = `Uploading ${file.name}…`;
+    cvUploadStatus.className = 'upload-status uploading';
+    api.uploadFile('/cv-profile/upload', file)
+      .then(result => {
+        cvUploadStatus.textContent = `Imported: summary extracted, ${result.skillsAdded} new skills added.`;
+        cvUploadStatus.className = 'upload-status success';
+        showToast(`CV parsed — ${result.skillsAdded} skills imported`, 'success');
+        return syncApp();
+      })
+      .catch(err => {
+        cvUploadStatus.textContent = err.message;
+        cvUploadStatus.className = 'upload-status error';
+        showToast(err.message, 'error');
+      });
+  }
+
+  cvFileInput.addEventListener('change', e => {
+    if (e.target.files.length) handleCvFile(e.target.files[0]);
+    e.target.value = '';
+  });
+
+  cvUploadZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    cvUploadZone.classList.add('drag-over');
+  });
+  cvUploadZone.addEventListener('dragleave', e => {
+    e.preventDefault();
+    cvUploadZone.classList.remove('drag-over');
+  });
+  cvUploadZone.addEventListener('drop', e => {
+    e.preventDefault();
+    cvUploadZone.classList.remove('drag-over');
+    if (e.dataTransfer.files.length) handleCvFile(e.dataTransfer.files[0]);
   });
 
   ideaForm.addEventListener('submit', async e => {

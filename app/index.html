@@ -363,6 +363,31 @@
               </div>
             </div>
           </section>
+
+          <section class="card cv-upload-card">
+            <div class="card-header">
+              <i class="ph ph-upload"></i>
+              <h2>Import from CV / Resume</h2>
+            </div>
+            <div class="card-body">
+              <div id="cv-upload-zone" class="upload-zone">
+                <div class="upload-zone-icon">
+                  <i class="ph ph-file-text"></i>
+                </div>
+                <p class="upload-zone-title">Drag & drop your CV here</p>
+                <p class="upload-zone-subtitle">or</p>
+                <label for="cv-file-input" class="btn btn-secondary btn-sm" style="cursor:pointer">
+                  <i class="ph ph-folder-open"></i> Browse Files
+                </label>
+                <input type="file" id="cv-file-input" accept=".pdf,.txt,application/pdf,text/plain" hidden />
+                <div class="upload-zone-formats">
+                  <span class="format-badge">PDF</span>
+                  <span class="format-badge">TXT</span>
+                </div>
+                <div id="cv-upload-status" class="upload-status"></div>
+              </div>
+            </div>
+          </section>
         </section>
 
         <!-- ── SKILLS PAGE ── -->

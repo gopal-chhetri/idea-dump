@@ -2,12 +2,14 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { CvProfile } from '../entities/cv-profile.entity';
 import { CvSkill } from '../entities/cv-skill.entity';
 import { User } from '../entities/user.entity';
 import { SkillCategory } from '../entities/enums';
+import { matchSkills, extractSummary } from './skill-dictionary';
 
 @Injectable()
 export class CvProfileService {
@@ -49,7 +51,6 @@ export class CvProfileService {
     let profile = await this.em.findOne(CvProfile, { user: userId });
 
     if (!profile) {
-      // Auto-create empty profile
       const user = await this.em.findOneOrFail(User, { id: userId });
       profile = this.em.create(CvProfile, { user, summaryText: '' });
       this.em.persist(profile);
@@ -78,7 +79,6 @@ export class CvProfileService {
       throw new NotFoundException('Skill not found');
     }
 
-    // Verify ownership via profile → user
     const profile = await this.em.findOneOrFail(
       CvProfile,
       { id: skill.cvProfile.id },
@@ -91,5 +91,70 @@ export class CvProfileService {
 
     this.em.remove(skill);
     await this.em.flush();
+  }
+
+  async uploadAndExtract(
+    userId: string,
+    buffer: Buffer,
+    mimeType: string,
+    fileName: string,
+  ): Promise<{ summaryText: string; skillsAdded: number }> {
+    let text: string;
+
+    if (mimeType === 'application/pdf' || fileName.endsWith('.pdf')) {
+      const { PDFParse } = await import('pdf-parse');
+      const parser = new PDFParse(new Uint8Array(buffer));
+      await (parser as any).load();
+      const result = await (parser as any).getText();
+      text = result.text ?? String(result);
+    } else if (
+      mimeType === 'text/plain' ||
+      fileName.endsWith('.txt') ||
+      mimeType.startsWith('text/')
+    ) {
+      text = buffer.toString('utf-8');
+    } else {
+      throw new BadRequestException(
+        'Unsupported file type. Please upload a PDF or TXT file.',
+      );
+    }
+
+    if (!text || text.trim().length === 0) {
+      throw new BadRequestException('File appears to be empty or unreadable.');
+    }
+
+    const summaryText = extractSummary(text);
+    const matchedSkills = matchSkills(text);
+
+    let profile = await this.em.findOne(CvProfile, { user: userId });
+    if (!profile) {
+      const user = await this.em.findOneOrFail(User, { id: userId });
+      profile = this.em.create(CvProfile, { user, summaryText });
+      this.em.persist(profile);
+    } else {
+      profile.summaryText = summaryText;
+    }
+
+    const existingSkills = await this.em.find(CvSkill, {
+      cvProfile: profile,
+    });
+    const existingNames = new Set(existingSkills.map((s) => s.name.toLowerCase()));
+
+    let skillsAdded = 0;
+    for (const entry of matchedSkills) {
+      if (!existingNames.has(entry.name.toLowerCase())) {
+        const skill = this.em.create(CvSkill, {
+          cvProfile: profile,
+          name: entry.name,
+          category: entry.category as SkillCategory,
+          weight: 3,
+        });
+        this.em.persist(skill);
+        skillsAdded++;
+      }
+    }
+
+    await this.em.flush();
+    return { summaryText, skillsAdded };
   }
 }

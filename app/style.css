@@ -1408,6 +1408,75 @@ table.data tbody tr:hover { background: var(--surface-card); }
 .inline-form input { flex: 1; min-width: 180px; }
 .form-error { color: var(--danger-color); font-size: 0.85rem; margin-top: 0.5rem; }
 
+/* ── CV Upload Zone ── */
+.upload-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2rem 1.5rem;
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  transition: border-color 0.2s, background 0.2s;
+  cursor: pointer;
+}
+.upload-zone:hover,
+.upload-zone.drag-over {
+  border-color: var(--accent-color);
+  background: var(--mustard-dim);
+}
+.upload-zone-icon {
+  font-size: 2rem;
+  color: var(--text-muted);
+  transition: color 0.2s;
+}
+.upload-zone.drag-over .upload-zone-icon {
+  color: var(--accent-color);
+}
+.upload-zone-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+.upload-zone-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+.upload-zone-formats {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.25rem;
+}
+.format-badge {
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--font-display);
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.6rem;
+  border-radius: 3px;
+  background: var(--mustard-dim);
+  color: var(--navy);
+  text-transform: uppercase;
+}
+.upload-status {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+  min-height: 1.2em;
+}
+.upload-status.uploading {
+  color: var(--accent-color);
+}
+.upload-status.success {
+  color: var(--success-color);
+}
+.upload-status.error {
+  color: var(--danger-color);
+}
+
 /* ── Responsiveness (shared) ── */
 @media (max-width: 960px) {
   .grid-3, .steps, .stat-grid { grid-template-columns: 1fr; }
