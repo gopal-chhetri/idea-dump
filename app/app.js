@@ -214,6 +214,10 @@ function showView(name) {
   if (view) view.classList.add('active');
 }
 
+function renderPhosphorIcons() {
+  if (typeof PhosphorIcons !== 'undefined') PhosphorIcons.render();
+}
+
 // ── Application ───────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   const api = new ApiClient();
@@ -367,7 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
       authBtn.innerHTML = '<i class="ph ph-sign-out"></i> Log Out';
       if (state.currentPage === 'my-backlog') {
         ideasStack.innerHTML = renderSkeletons(3);
-        PhosphorIcons.render();
+        renderPhosphorIcons();
       }
       try {
         const [profile, ideas] = await Promise.all([
@@ -402,7 +406,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderSkillsList();
     renderQuota();
     renderIdeas();
-    PhosphorIcons.render();
+    renderPhosphorIcons();
   }
 
   function renderSkillsList() {
@@ -656,7 +660,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const submitBtn = ideaForm.querySelector('[type="submit"]');
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span class="ph ph-spinner spin"></span> Scoring…';
-    PhosphorIcons.render();
+    renderPhosphorIcons();
 
     const title = $('idea-title').value.trim();
     const desc = $('idea-desc').value.trim();
@@ -679,7 +683,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } finally {
       submitBtn.disabled = false;
       submitBtn.innerHTML = '<i class="ph ph-plus-circle"></i> Submit & Score Idea';
-      PhosphorIcons.render();
+      renderPhosphorIcons();
     }
 
     await syncApp();
@@ -902,7 +906,7 @@ document.addEventListener('DOMContentLoaded', () => {
   $('admin-create-user-btn').addEventListener('click', () => {
     adminUserModal.classList.add('active');
     $('admin-user-error').textContent = '';
-    PhosphorIcons.render();
+    renderPhosphorIcons();
   });
   $('admin-user-form').addEventListener('submit', async e => {
     e.preventDefault();
