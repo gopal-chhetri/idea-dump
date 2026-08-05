@@ -1,5 +1,5 @@
 /**
- * Idea Dump — Unified Client Application
+ * Idea Dump: Unified Client Application
  * Single SPA: landing when logged out, dashboard app-shell when authenticated.
  * Admins see extra sidebar items (Users / Ideas / Settings).
  */
@@ -382,7 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
         state.ideas = Array.isArray(ideas) ? ideas : [];
       } catch (err) {
         console.error('Backend sync error:', err);
-        showToast('Sync failed — showing local data', 'warning');
+        showToast('Sync failed - showing local data', 'warning');
       }
     } else {
       state.isAuthenticated = online && !!api.token;
@@ -456,7 +456,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="empty-state">
           <i class="ph ph-inbox"></i>
           <h3>No ideas captured</h3>
-          <p>Submit your first project idea above — the engine will score and rank it instantly.</p>
+          <p>Submit your first project idea above: the engine will score and rank it instantly.</p>
         </div>`;
       return;
     }
@@ -531,15 +531,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         <div class="idea-metrics-bar">
           <div class="metric-item">
-            <span class="metric-label">CV Fit — ${s.fitScore ?? 0}%</span>
+            <span class="metric-label">CV Fit: ${s.fitScore ?? 0}%</span>
             <div class="metric-bar-bg"><div class="metric-bar-fill" style="width:${s.fitScore ?? 0}%"></div></div>
           </div>
           <div class="metric-item">
-            <span class="metric-label">Ease — ${100 - (s.effortScore ?? 0)}%</span>
+            <span class="metric-label">Ease: ${100 - (s.effortScore ?? 0)}%</span>
             <div class="metric-bar-bg"><div class="metric-bar-fill" style="width:${100 - (s.effortScore ?? 0)}%"></div></div>
           </div>
           <div class="metric-item">
-            <span class="metric-label">Novelty — ${s.noveltyScore ?? 0}%</span>
+            <span class="metric-label">Novelty: ${s.noveltyScore ?? 0}%</span>
             <div class="metric-bar-bg"><div class="metric-bar-fill" style="width:${s.noveltyScore ?? 0}%"></div></div>
           </div>
         </div>
@@ -620,13 +620,13 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast('Please upload a PDF or TXT file.', 'error');
       return;
     }
-    cvUploadStatus.textContent = `Uploading ${file.name}…`;
+    cvUploadStatus.textContent = `Uploading ${file.name}...`;
     cvUploadStatus.className = 'upload-status uploading';
     api.uploadFile('/cv-profile/upload', file)
       .then(result => {
         cvUploadStatus.textContent = `Imported: summary extracted, ${result.skillsAdded} new skills added.`;
         cvUploadStatus.className = 'upload-status success';
-        showToast(`CV parsed — ${result.skillsAdded} skills imported`, 'success');
+        showToast(`CV parsed - ${result.skillsAdded} skills imported`, 'success');
         return syncApp();
       })
       .catch(err => {
@@ -659,7 +659,7 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     const submitBtn = ideaForm.querySelector('[type="submit"]');
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="ph ph-spinner spin"></span> Scoring…';
+    submitBtn.innerHTML = '<span class="ph ph-spinner spin"></span> Scoring...';
     renderPhosphorIcons();
 
     const title = $('idea-title').value.trim();
@@ -930,8 +930,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await api.request(`/admin/ideas?page=${state.admin.ideasPage}&limit=20`);
       tbody.innerHTML = data.ideas.map(idea => {
         const scores = idea.scores && idea.scores.length ? idea.scores : [];
-        const scoreVal = scores.length ? Math.round(scores[0].finalScore) : '—';
-        const userEmail = idea.user ? idea.user.email : '—';
+        const scoreVal = scores.length ? Math.round(scores[0].finalScore) : '-';
+        const userEmail = idea.user ? idea.user.email : '-';
         return `
           <tr>
             <td>${escapeHtml(idea.title)}</td>

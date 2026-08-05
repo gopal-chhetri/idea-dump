@@ -31,7 +31,7 @@ async function bootstrap() {
     res.status(200).json({ status: 'ok' });
   });
 
-  // Serve static assets — single unified SPA
+  // Serve static assets - single unified SPA
   app.useStaticAssets(join(process.cwd(), 'app'), { prefix: '/app' });
   httpAdapter.get('/', (_req: Request, res: Response) => {
     res.redirect('/app/');

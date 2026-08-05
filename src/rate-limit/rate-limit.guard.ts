@@ -39,7 +39,7 @@ export class RateLimitGuard implements CanActivate {
       const current = await this.redis.incr(redisKey);
 
       if (current === 1) {
-        // First idea today — set expiry to seconds until UTC midnight
+        // First idea today - set expiry to seconds until UTC midnight
         const secondsUntilMidnight = this.secondsUntilUtcMidnight();
         await this.redis.expire(redisKey, secondsUntilMidnight);
       }
@@ -53,7 +53,7 @@ export class RateLimitGuard implements CanActivate {
     } catch (err) {
       if (err instanceof HttpException) throw err;
 
-      // Redis unavailable — fall back to DB
+      // Redis unavailable - fall back to DB
       console.warn(
         'Redis unavailable, falling back to DB quota check:',
         err as unknown,

@@ -3,7 +3,7 @@
    Top paper-strip nav + left corkboard sidebar.
    Breakpoints mirror style.css:
      mobile   < 768px
-     tablet   768px – 1024px
+     tablet   768px - 1024px
      desktop  > 1024px
      large    > 1440px
    =========================================================== */
@@ -375,7 +375,7 @@ html.dark .sidebar {
 }
 
 /* ===========================================================
-   Responsive: TABLET (768px – 1024px)
+   Responsive: TABLET (768px - 1024px)
    Icon-only collapsed sidebar.
    =========================================================== */
 @media (min-width: 768px) and (max-width: 1024px) {

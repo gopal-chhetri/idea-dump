@@ -24,7 +24,7 @@ export class CreateCvSkillDto {
   @ApiProperty({
     enum: SkillCategory,
     example: SkillCategory.LANGUAGE,
-    description: 'Skill category — language, framework, tool, or domain',
+    description: 'Skill category: language, framework, tool, or domain',
   })
   @IsEnum(SkillCategory)
   category!: SkillCategory;

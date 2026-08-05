@@ -25,7 +25,7 @@ export class CvSkill {
   @Enum({ items: () => SkillCategory })
   category!: SkillCategory;
 
-  /** 1–5, higher = more proficient / relevant */
+  /** 1-5, higher = more proficient / relevant */
   @Property({ type: 'smallint' })
   weight: number = 3;
 }

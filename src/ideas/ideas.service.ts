@@ -47,7 +47,7 @@ export class IdeasService {
     });
     this.em.persist(idea);
 
-    // DB quota backstop — update in same transaction
+    // DB quota backstop - update in same transaction
     await this.updateQuota(userId);
 
     await this.em.flush();

@@ -101,7 +101,7 @@ export class AuthService {
     const stored = await this.em.findOne(RefreshToken, { tokenHash });
 
     if (!stored || stored.revokedAt || stored.expiresAt < new Date()) {
-      // Potential reuse detected — revoke all tokens for user
+      // Potential reuse detected - revoke all tokens for user
       if (stored) {
         await this.revokeAllUserTokens(
           typeof stored.user === 'string' ? stored.user : stored.user.id,
