@@ -7,12 +7,15 @@ import { OAuthProvider } from '../../entities/enums';
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor(private readonly authService: AuthService) {
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000/app';
+    const origin = frontendUrl.replace(/\/app\/?$/, '');
     super({
       clientID: process.env.GOOGLE_CLIENT_ID || 'placeholder',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'placeholder',
-      callbackURL:
-        process.env.GOOGLE_CALLBACK_URL ||
-        'http://localhost:3000/auth/google/callback',
+      // Explicit redirect_uri matching the single URI registered on the
+      // Google OAuth App, derived from FRONTEND_URL so they can't drift.
+      // /api/auth/google/callback is also served but is not registered.
+      callbackURL: `${origin}/auth/google/callback`,
       scope: ['email', 'profile'],
     });
   }

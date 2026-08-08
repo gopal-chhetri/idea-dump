@@ -138,7 +138,9 @@ export class CvProfileService {
     const existingSkills = await this.em.find(CvSkill, {
       cvProfile: profile,
     });
-    const existingNames = new Set(existingSkills.map((s) => s.name.toLowerCase()));
+    const existingNames = new Set(
+      existingSkills.map((s) => s.name.toLowerCase()),
+    );
 
     let skillsAdded = 0;
     for (const entry of matchedSkills) {

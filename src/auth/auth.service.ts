@@ -57,6 +57,25 @@ export class AuthService {
 
   // ── OAuth ───────────────────────────────────────────────
 
+  /**
+   * Builds the post-login redirect URL for the OAuth provider (Google).
+   * Issues a token pair and appends them as query params for the SPA. Falls
+   * back to a friendly error redirect when no user session is present.
+   */
+  async oauthRedirectUrl(user: User | undefined): Promise<string> {
+    const frontendOrigin =
+      process.env.FRONTEND_URL || 'http://localhost:3000/app';
+    if (!user) {
+      return `${frontendOrigin}?error=auth_failed`;
+    }
+    const tokens = await this.issueTokens(user);
+    const params = new URLSearchParams({
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+    });
+    return `${frontendOrigin}?${params.toString()}`;
+  }
+
   async validateOAuthUser(
     provider: OAuthProvider,
     providerAccountId: string,

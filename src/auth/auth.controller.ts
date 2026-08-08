@@ -97,49 +97,7 @@ export class AuthController {
       'Redirects to frontend with accessToken and refreshToken query params.',
   })
   async googleCallback(@Req() req: Request, @Res() res: Response) {
-    const tokens = await this.authService.login(req.user as User);
-    const frontendOrigin =
-      process.env.FRONTEND_URL || 'http://localhost:3000/app';
-    const params = new URLSearchParams({
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-    });
-    res.redirect(`${frontendOrigin}?${params.toString()}`);
-  }
-
-  // ── GitHub OAuth ──────────────────────────────────────
-
-  @UseGuards(AuthGuard('github'))
-  @Get('github')
-  @ApiOperation({
-    summary: 'Initiate GitHub OAuth flow',
-    description: 'Redirects the browser to the GitHub authorization page.',
-  })
-  @ApiResponse({ status: 302, description: 'Redirects to GitHub.' })
-  githubLogin() {
-    // Passport redirects to GitHub
-  }
-
-  @UseGuards(AuthGuard('github'))
-  @Get('github/callback')
-  @ApiOperation({
-    summary: 'GitHub OAuth callback',
-    description:
-      'Handles the GitHub OAuth redirect and issues tokens. Redirects to FRONTEND_URL with tokens in query string.',
-  })
-  @ApiResponse({
-    status: 302,
-    description:
-      'Redirects to frontend with accessToken and refreshToken query params.',
-  })
-  async githubCallback(@Req() req: Request, @Res() res: Response) {
-    const tokens = await this.authService.login(req.user as User);
-    const frontendOrigin =
-      process.env.FRONTEND_URL || 'http://localhost:3000/app';
-    const params = new URLSearchParams({
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-    });
-    res.redirect(`${frontendOrigin}?${params.toString()}`);
+    const url = await this.authService.oauthRedirectUrl(req.user as User);
+    res.redirect(url);
   }
 }

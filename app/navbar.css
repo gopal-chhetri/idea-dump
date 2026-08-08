@@ -124,7 +124,7 @@ html.dark .theme-toggle .ph-sun  { opacity: 1; transform: scale(1); }
 .nav-btn.btn-ghost:hover { background: var(--surface-card); }
 .nav-btn.btn-primary {
   background: var(--accent-color);
-  color: var(--navy);
+  color: #243447;
   box-shadow: 0 4px 12px var(--mustard-glow);
   border-bottom: 2px solid var(--mustard-deep);
   transform: rotate(-0.3deg);

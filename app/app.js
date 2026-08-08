@@ -822,9 +822,6 @@ document.addEventListener('DOMContentLoaded', () => {
   $('google-auth-btn').addEventListener('click', () => {
     window.location.href = `${api.baseUrl}/auth/google`;
   });
-  $('github-auth-btn').addEventListener('click', () => {
-    window.location.href = `${api.baseUrl}/auth/github`;
-  });
 
   // ── Sidebar nav + mobile drawer ─────────────────────────────────────────
   document.querySelectorAll('.nav-item').forEach(tab =>

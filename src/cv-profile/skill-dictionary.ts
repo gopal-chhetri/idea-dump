@@ -1,6 +1,6 @@
 export interface SkillEntry {
-  name: string
-  category: 'language' | 'framework' | 'tool' | 'domain'
+  name: string;
+  category: 'language' | 'framework' | 'tool' | 'domain';
 }
 
 const LANGUAGES: SkillEntry[] = [
@@ -34,7 +34,7 @@ const LANGUAGES: SkillEntry[] = [
   { name: 'CSS', category: 'language' },
   { name: 'Sass', category: 'language' },
   { name: 'Less', category: 'language' },
-]
+];
 
 const FRAMEWORKS: SkillEntry[] = [
   { name: 'NestJS', category: 'framework' },
@@ -86,7 +86,7 @@ const FRAMEWORKS: SkillEntry[] = [
   { name: 'LangChain', category: 'framework' },
   { name: 'OpenAI SDK', category: 'framework' },
   { name: 'Hugging Face', category: 'framework' },
-]
+];
 
 const TOOLS: SkillEntry[] = [
   { name: 'Docker', category: 'tool' },
@@ -150,7 +150,7 @@ const TOOLS: SkillEntry[] = [
   { name: 'Passport.js', category: 'tool' },
   { name: 'Swagger', category: 'tool' },
   { name: 'OpenAPI', category: 'tool' },
-]
+];
 
 const DOMAINS: SkillEntry[] = [
   { name: 'Distributed Systems', category: 'domain' },
@@ -192,40 +192,46 @@ const DOMAINS: SkillEntry[] = [
   { name: 'Code Review', category: 'domain' },
   { name: 'Agile', category: 'domain' },
   { name: 'Scrum', category: 'domain' },
-]
+];
 
 export const SKILL_DICTIONARY: SkillEntry[] = [
   ...LANGUAGES,
   ...FRAMEWORKS,
   ...TOOLS,
   ...DOMAINS,
-]
+];
 
 export function matchSkills(text: string): SkillEntry[] {
-  const lower = text.toLowerCase()
-  const matched: SkillEntry[] = []
-  const seen = new Set<string>()
+  const lower = text.toLowerCase();
+  const matched: SkillEntry[] = [];
+  const seen = new Set<string>();
 
   for (const entry of SKILL_DICTIONARY) {
-    const key = entry.name.toLowerCase()
-    if (seen.has(key)) continue
-    const pattern = new RegExp(`\\b${key.replace(/[.+*?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i')
+    const key = entry.name.toLowerCase();
+    if (seen.has(key)) continue;
+    const pattern = new RegExp(
+      `\\b${key.replace(/[.+*?^${}()|[\]\\]/g, '\\$&')}\\b`,
+      'i',
+    );
     if (pattern.test(lower)) {
-      matched.push(entry)
-      seen.add(key)
+      matched.push(entry);
+      seen.add(key);
     }
   }
 
-  return matched
+  return matched;
 }
 
 export function extractSummary(text: string): string {
-  const headingRegex = /(?:\b(?:summary|professional\s+summary|profile|about\s+me|overview)\b)[:\s]*([\s\S]*?)(?=\n\s*(?:\n|#{1,6}\s|\b(?:experience|skills|education|work\s+experience|employment|projects|certifications|contact|references)\b))/i
-  const match = text.match(headingRegex)
+  const headingRegex =
+    /(?:\b(?:summary|professional\s+summary|profile|about\s+me|overview)\b)[:\s]*([\s\S]*?)(?=\n\s*(?:\n|#{1,6}\s|\b(?:experience|skills|education|work\s+experience|employment|projects|certifications|contact|references)\b))/i;
+  const match = text.match(headingRegex);
   if (match && match[1].trim().length > 20) {
-    return match[1].trim()
+    return match[1].trim();
   }
 
-  const fallback = text.replace(/^[\s\S]*?\n(?:.*?)(?:\n|$)/, '').trim()
-  return fallback.length > 20 ? fallback.slice(0, 350).trim() : text.slice(0, 350).trim()
+  const fallback = text.replace(/^[\s\S]*?\n(?:.*?)(?:\n|$)/, '').trim();
+  return fallback.length > 20
+    ? fallback.slice(0, 350).trim()
+    : text.slice(0, 350).trim();
 }

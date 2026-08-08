@@ -439,7 +439,7 @@ input:user-invalid {
 
 .btn-primary {
   background: var(--accent-color);
-  color: var(--navy);
+  color: #243447;
   box-shadow: 0 4px 12px var(--mustard-glow);
   border-bottom: 2px solid var(--mustard-deep);
   --rot: -0.4deg;
@@ -448,6 +448,14 @@ input:user-invalid {
 .btn-primary:hover {
   box-shadow: 0 6px 20px var(--mustard-glow);
   transform: rotate(calc(var(--rot) * 1.5)) translateY(-2px);
+}
+
+/* Dark mode: keep primary buttons subtle, matching light-mode feel. */
+html.dark .btn-primary {
+  box-shadow: 0 2px 8px rgba(232, 184, 48, 0.14);
+}
+html.dark .btn-primary:hover {
+  box-shadow: 0 4px 14px rgba(232, 184, 48, 0.16);
 }
 
 .btn-coral {

@@ -86,13 +86,31 @@ Once running, visit:
 
 ### Key Endpoints
 
+> Note: routes have **no `/api` prefix** (the backend has no global prefix).
+> `/api/auth/google/callback` is also served as a compatibility alias.
+
 | Method | Path | Description | Auth |
 |--------|------|-------------|------|
-| POST | `/api/auth/register` | Register new user | No |
-| POST | `/api/auth/login` | Login | No |
-| POST | `/api/ideas` | Create idea | Yes |
-| GET | `/api/ideas` | List user's ideas | Yes |
-| DELETE | `/api/ideas/:id` | Deactivate idea | Yes |
+| POST | `/auth/register` | Register new user | No |
+| POST | `/auth/login` | Login | No |
+| GET | `/auth/google` | Start Google OAuth | No |
+| GET | `/auth/google/callback` | Google OAuth callback | No |
+| POST | `/ideas` | Create idea | Yes |
+| GET | `/ideas` | List user's ideas | Yes |
+| DELETE | `/ideas/:id` | Deactivate idea | Yes |
+
+### Google OAuth Setup
+
+1. In Google Cloud Console, under **APIs & Services → Credentials →
+   OAuth 2.0 Client IDs**, configure the web client:
+   - **Authorized JavaScript origins:** `https://ideas.soylab.dpdns.org`
+   - **Authorized redirect URIs:** `https://ideas.soylab.dpdns.org/auth/google/callback`
+2. Configure the secrets (via Infisical in prod):
+   - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+3. `FRONTEND_URL` (e.g. `https://ideas.soylab.dpdns.org/app`) controls where the
+   OAuth callback redirects the browser with the token pair.
+4. `callbackURL` is derived from `FRONTEND_URL` (origin + `/auth/google/callback`)
+   so it always matches the single registered redirect URI.
 
 ### CI/CD Pipeline
 

@@ -24,10 +24,6 @@ services:
       - IDEA_DAILY_LIMIT=${IDEA_DAILY_LIMIT:-2}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
-      - GOOGLE_CALLBACK_URL=${GOOGLE_CALLBACK_URL:-}
-      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
-      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
-      - GITHUB_CALLBACK_URL=${GITHUB_CALLBACK_URL:-}
       - FRONTEND_URL=${FRONTEND_URL:-https://ideas.soylab.dpdns.org/app}
     labels:
       - "traefik.enable=true"
