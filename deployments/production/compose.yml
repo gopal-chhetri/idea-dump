@@ -21,7 +21,7 @@ services:
       - SCORE_WEIGHT_FIT=${SCORE_WEIGHT_FIT:-0.5}
       - SCORE_WEIGHT_EFFORT=${SCORE_WEIGHT_EFFORT:-0.3}
       - SCORE_WEIGHT_NOVELTY=${SCORE_WEIGHT_NOVELTY:-0.2}
-      - IDEA_DAILY_LIMIT=${IDEA_DAILY_LIMIT:-2}
+      - IDEA_DAILY_LIMIT=${IDEA_DAILY_LIMIT:-10}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
       - FRONTEND_URL=${FRONTEND_URL:-https://ideas.soylab.dpdns.org/app}
@@ -30,15 +30,18 @@ services:
       - "traefik.docker.network=traefik-network"
       # HTTP config
       - "traefik.http.routers.idea_dump_http.entrypoints=http"
-      - "traefik.http.routers.idea_dump_http.rule=Host(`${DOMAIN:-ideas.soylab.dpdns.org}`)"
+      - "traefik.http.routers.idea_dump_http.rule=Host(`${DOMAIN:-ideas.soylab.\
+        dpdns.org}`)"
       # HTTPS config
       - "traefik.http.routers.idea_dump_https.entrypoints=https"
-      - "traefik.http.routers.idea_dump_https.rule=Host(`${DOMAIN:-ideas.soylab.dpdns.org}`)"
+      - "traefik.http.routers.idea_dump_https.rule=Host(`${DOMAIN:-ideas.soylab\
+        .dpdns.org}`)"
       - "traefik.http.routers.idea_dump_https.tls=true"
       - "traefik.http.routers.idea_dump_https.tls.certresolver=le"
       - "traefik.http.routers.idea_dump_https.service=idea_dump_service"
       # Service config
-      - "traefik.http.services.idea_dump_service.loadbalancer.server.port=${PORT:-7501}"
+      - "traefik.http.services.idea_dump_service.loadbalancer.server.port=${POR\
+        T:-7501}"
       # HTTPS redirect middleware
       - "traefik.http.routers.idea_dump_http.middlewares=https-redirect"
     networks:

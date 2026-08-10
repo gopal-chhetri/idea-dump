@@ -30,12 +30,14 @@ export class IdeasService {
       description: string;
       features?: string[];
       useCase: string;
+      status?: string;
     },
   ): Promise<Idea> {
     const user = await this.em.findOneOrFail(User, { id: userId });
-    const status =
-      (await this.em.findOne(IdeaStatus, { isDefault: true })) ??
-      (await this.resolveStatus(DEFAULT_STATUS));
+    const status = data.status
+      ? await this.resolveStatus(data.status)
+      : (await this.em.findOne(IdeaStatus, { isDefault: true })) ??
+        (await this.resolveStatus(DEFAULT_STATUS));
 
     const idea = this.em.create(Idea, {
       user,

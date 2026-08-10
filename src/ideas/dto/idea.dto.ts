@@ -40,6 +40,15 @@ export class CreateIdeaDto {
   })
   @IsString()
   useCase!: string;
+
+  @ApiPropertyOptional({
+    example: 'in_progress',
+    description:
+      'Workflow status value of the idea (draft, in_progress, completed, archived)',
+  })
+  @IsString()
+  @IsOptional()
+  status?: string;
 }
 
 export class UpdateIdeaDto {
