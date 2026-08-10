@@ -36,8 +36,8 @@ export class IdeasService {
     const user = await this.em.findOneOrFail(User, { id: userId });
     const status = data.status
       ? await this.resolveStatus(data.status)
-      : (await this.em.findOne(IdeaStatus, { isDefault: true })) ??
-        (await this.resolveStatus(DEFAULT_STATUS));
+      : ((await this.em.findOne(IdeaStatus, { isDefault: true })) ??
+        (await this.resolveStatus(DEFAULT_STATUS)));
 
     const idea = this.em.create(Idea, {
       user,

@@ -23,7 +23,7 @@ export class RateLimitGuard implements CanActivate {
     @Inject('REDIS_CLIENT') private readonly redis: Redis,
     private readonly em: EntityManager,
   ) {
-    this.dailyLimit = Number(process.env.DAILY_LIMIT) || 2;
+    this.dailyLimit = Number(process.env.IDEA_DAILY_LIMIT) || 10;
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
