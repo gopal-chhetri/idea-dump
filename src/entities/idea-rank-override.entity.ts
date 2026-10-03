@@ -14,7 +14,10 @@ export class IdeaRankOverride {
   @PrimaryKey({ type: 'uuid' })
   id: string = v4();
 
-  @OneToOne(() => Idea, (idea) => idea.rankOverride, { owner: true })
+  @OneToOne(() => Idea, (idea) => idea.rankOverride, {
+    owner: true,
+    deleteRule: 'cascade',
+  })
   idea!: Idea;
 
   @Property({ type: 'int', nullable: true })

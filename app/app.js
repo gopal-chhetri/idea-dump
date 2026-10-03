@@ -228,7 +228,8 @@ document.addEventListener('DOMContentLoaded', () => {
     email: null,
     profile: { summaryText: '', skills: [] },
     ideas: [],
-    quota: { count: 0, limit: 2 },
+    editIdeaId: null,
+    quota: { count: 0, limit: 10 },
     currentPage: 'my-backlog',
     admin: { usersPage: 1, ideasPage: 1 },
   };
@@ -330,13 +331,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ── OAuth token pickup from URL (redirect flow) ──────────────────────────
+  // Tokens arrive in the URL fragment so they never reach server logs.
   (function consumeOAuthParams() {
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(window.location.hash.slice(1));
     const at = params.get('accessToken');
     const rt = params.get('refreshToken');
     if (at && rt) {
       api.setTokens(at, rt);
-      window.history.replaceState({}, '', window.location.pathname);
+      window.history.replaceState({}, '', window.location.pathname + window.location.search);
     }
   })();
 
@@ -365,6 +367,17 @@ document.addEventListener('DOMContentLoaded', () => {
   async function syncApp() {
     const online = await api.checkConnection();
     updateConnectionBadge(online);
+
+    if (online) {
+      try {
+        const health = await api.request('/health').catch(() => null);
+        if (health && typeof health.dailyLimit === 'number') {
+          state.quota.limit = health.dailyLimit;
+        }
+      } catch {
+        /* keep fallback limit */
+      }
+    }
 
     if (online && api.token) {
       state.isAuthenticated = true;
@@ -404,6 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderUi() {
     cvSummaryInput.value = state.profile.summaryText || '';
     renderSkillsList();
+    state.quota.count = state.ideas.length;
     renderQuota();
     renderIdeas();
     renderPhosphorIcons();
@@ -483,10 +497,31 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>`;
     }).join('');
 
-    ideasStack.querySelectorAll('.delete-idea-btn').forEach(btn =>
-      btn.addEventListener('click', e => deleteIdea(e.currentTarget.dataset.id)));
-    ideasStack.querySelectorAll('.rescore-idea-btn').forEach(btn =>
-      btn.addEventListener('click', e => rescoreIdea(e.currentTarget.dataset.id)));
+     ideasStack.querySelectorAll('.delete-idea-btn').forEach(btn =>
+       btn.addEventListener('click', e => deleteIdea(e.currentTarget.dataset.id)));
+     ideasStack.querySelectorAll('.rescore-idea-btn').forEach(btn =>
+       btn.addEventListener('click', e => rescoreIdea(e.currentTarget.dataset.id)));
+     ideasStack.querySelectorAll('.edit-idea-btn').forEach(btn =>
+       btn.addEventListener('click', e => { state.editIdeaId = e.currentTarget.dataset.id; renderIdeas(); }));
+     ideasStack.querySelectorAll('.cancel-edit-btn').forEach(btn =>
+       btn.addEventListener('click', () => { state.editIdeaId = null; renderIdeas(); }));
+     ideasStack.querySelectorAll('.edit-idea-form').forEach(form => {
+       form.addEventListener('submit', async e => {
+         e.preventDefault();
+         const id = e.currentTarget.dataset.id;
+         const fd = new FormData(e.currentTarget);
+         const patch = {
+           description: fd.get('description').trim(),
+           useCase: fd.get('useCase').trim(),
+           features: fd.get('features')
+             ? fd.get('features').split(',').map(s => s.trim()).filter(Boolean)
+             : [],
+           status: fd.get('status'),
+         };
+         // title is not editable in this form (kept as-is)
+         await saveEditIdea(id, patch);
+       });
+     });
     ideasStack.querySelectorAll('.rank-idea-btn').forEach(btn =>
       btn.addEventListener('click', e => {
         const b = e.currentTarget;
@@ -497,7 +532,73 @@ document.addEventListener('DOMContentLoaded', () => {
         changeIdeaStatus(e.currentTarget.dataset.id, e.currentTarget.value)));
   }
 
+  function renderIdeaEditor(idea) {
+    const features = idea.features || [];
+    const sv = statusValue(idea.status);
+
+    return `
+    <article class="card idea-card editing" data-id="${escapeHtml(idea.id)}">
+      <form class="edit-idea-form" data-id="${escapeHtml(idea.id)}">
+        <div class="card-body">
+          <div class="idea-card-header">
+            <div class="idea-title-block">
+              <h3>Editing: ${escapeHtml(idea.title)}</h3>
+            </div>
+            <span class="badge badge-status">${escapeHtml(STATUS_LABELS[sv] || sv)}</span>
+          </div>
+
+          <div class="form-group">
+            <label>Problem / Value Proposition</label>
+            <textarea name="description" rows="3" required>${escapeHtml(idea.description)}</textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Key Features (comma separated)</label>
+            <input type="text" name="features" value="${escapeHtml(features.join(', '))}" placeholder="e.g., Yjs CRDTs, WebSocket syncing" />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group flex-2">
+              <label>Target Use Case</label>
+              <textarea name="useCase" rows="2" required>${escapeHtml(idea.useCase)}</textarea>
+            </div>
+            <div class="form-group flex-1">
+              <label>Status</label>
+              <select name="status">${STATUS_ORDER.map(sv2 => `<option value="${sv2}" ${sv2 === sv ? 'selected' : ''}>${STATUS_LABELS[sv2]}</option>`).join('')}</select>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-footer">
+          <button type="button" class="btn btn-secondary btn-sm cancel-edit-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm">Save & Rescore</button>
+        </div>
+      </form>
+    </article>`;
+  }
+
+  async function saveEditIdea(id, patch) {
+    if (!api.isOnline || !api.token) return;
+    try {
+      await api.request(`/ideas/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(patch),
+      });
+      // Rescore after edits to recompute against the latest CV profile
+      await api.request(`/ideas/${id}/rescore`, { method: 'POST' });
+      state.editIdeaId = null;
+      await syncApp();
+      showToast('Idea updated and rescored', 'success');
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  // ── Idea cards ───────────────────────────────────────────────────────────
   function renderIdeaCard(idea) {
+    if (state.editIdeaId === idea.id) {
+      return renderIdeaEditor(idea);
+    }
     const s = idea.scores?.[0] || {};
     const score = s.finalScore ?? 0;
     const features = idea.features || [];
@@ -557,6 +658,9 @@ document.addEventListener('DOMContentLoaded', () => {
           ${api.isOnline ? `
           <button class="btn btn-secondary btn-sm rescore-idea-btn" data-id="${escapeHtml(idea.id)}">
             <i class="ph ph-arrow-clockwise"></i> Rescore
+          </button>
+          <button class="btn btn-secondary btn-sm edit-idea-btn" data-id="${escapeHtml(idea.id)}" title="Edit">
+            <i class="ph ph-pencil"></i>
           </button>` : ''}
           <button class="btn btn-danger btn-sm delete-idea-btn" data-id="${escapeHtml(idea.id)}">
             <i class="ph ph-trash"></i>
@@ -766,6 +870,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function handleAuthClick() {
     if (state.isAuthenticated) {
+      // Revoke the refresh token server-side; sign out locally regardless.
+      const refreshToken = api.refreshToken;
+      if (refreshToken) {
+        api.request('/auth/logout', {
+          method: 'POST',
+          body: JSON.stringify({ refreshToken }),
+        }).catch(() => {});
+      }
       api.clearTokens();
       state.isAuthenticated = false;
       state.role = null;
@@ -911,7 +1023,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const password = $('admin-user-password').value;
     const role = $('admin-user-role').value;
     try {
-      await api.request('/admin/users', { method: 'POST', body: JSON.stringify({ email, passwordHash: password || undefined, role }) });
+      await api.request('/admin/users', { method: 'POST', body: JSON.stringify({ email, password: password || undefined, role }) });
       adminUserModal.classList.remove('active');
       $('admin-user-form').reset();
       loadAdminUsers();

@@ -35,17 +35,10 @@ export class ScoringService {
     // Load all user ideas for novelty calculation
     const userIdeas = await this.em.find(Idea, { user: userId });
 
-    // If no CV profile, create a minimal one for scoring
-    const scoringProfile =
-      profile ??
-      this.em.create(CvProfile, {
-        user: userId,
-        summaryText: '',
-      } as never);
-
+    // No CV profile yet scores against an empty skill set (neutral fit).
     const result = await this.ruleBasedStrategy.score(
       idea,
-      scoringProfile,
+      profile?.skills.getItems() ?? [],
       userIdeas,
     );
 

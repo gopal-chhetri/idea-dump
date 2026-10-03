@@ -18,7 +18,7 @@ export class OAuthAccount {
   @PrimaryKey({ type: 'uuid' })
   id: string = v4();
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { deleteRule: 'cascade' })
   user!: User;
 
   @Enum({ items: () => OAuthProvider })

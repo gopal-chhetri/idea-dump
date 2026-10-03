@@ -103,7 +103,7 @@ export class RankingService {
   }
 
   private assertOwnership(idea: Idea, userId: string): void {
-    const ideaUserId = typeof idea.user === 'string' ? idea.user : idea.user.id;
+    const ideaUserId = idea.user.id;
     if (ideaUserId !== userId) {
       throw new ForbiddenException('Not your idea');
     }

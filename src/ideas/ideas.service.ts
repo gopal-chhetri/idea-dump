@@ -2,23 +2,30 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Idea } from '../entities/idea.entity';
 import { User } from '../entities/user.entity';
 import { IdeaStatus } from '../entities/idea-status.entity';
-import { DailyIdeaQuota } from '../entities/daily-idea-quota.entity';
+import { DailyQuotaService } from '../rate-limit/daily-quota.service';
 
 const DEFAULT_STATUS = 'draft';
 
 @Injectable()
 export class IdeasService {
-  constructor(private readonly em: EntityManager) {}
+  private readonly logger = new Logger(IdeasService.name);
+
+  constructor(
+    private readonly em: EntityManager,
+    private readonly quota: DailyQuotaService,
+  ) {}
 
   private async resolveStatus(value: string): Promise<IdeaStatus> {
     const status = await this.em.findOne(IdeaStatus, { value });
     if (!status) {
-      throw new NotFoundException(`Unknown idea status: ${value}`);
+      throw new BadRequestException(`Unknown idea status: ${value}`);
     }
     return status;
   }
@@ -33,26 +40,37 @@ export class IdeasService {
       status?: string;
     },
   ): Promise<Idea> {
-    const user = await this.em.findOneOrFail(User, { id: userId });
-    const status = data.status
-      ? await this.resolveStatus(data.status)
-      : ((await this.em.findOne(IdeaStatus, { isDefault: true })) ??
-        (await this.resolveStatus(DEFAULT_STATUS)));
+    // Reserved here rather than in a guard: guards run before validation,
+    // so a rejected request would otherwise still use up the quota.
+    const release = await this.quota.reserve(userId);
+    let idea: Idea;
+    try {
+      const user = await this.em.findOneOrFail(User, { id: userId });
+      const status = data.status
+        ? await this.resolveStatus(data.status)
+        : ((await this.em.findOne(IdeaStatus, { isDefault: true })) ??
+          (await this.resolveStatus(DEFAULT_STATUS)));
 
-    const idea = this.em.create(Idea, {
-      user,
-      title: data.title,
-      description: data.description,
-      features: data.features ?? [],
-      useCase: data.useCase,
-      status,
-    });
-    this.em.persist(idea);
+      idea = this.em.create(Idea, {
+        user,
+        title: data.title,
+        description: data.description,
+        features: data.features ?? [],
+        useCase: data.useCase,
+        status,
+      });
+      await this.em.persist(idea).flush();
+    } catch (err) {
+      await release();
+      throw err;
+    }
 
-    // DB quota backstop - update in same transaction
-    await this.updateQuota(userId);
-
-    await this.em.flush();
+    // The idea exists now; a failed backstop write must not undo or fail it.
+    await this.quota
+      .recordInDb(userId)
+      .catch((err: unknown) =>
+        this.logger.warn(`Failed to record DB quota: ${String(err)}`),
+      );
     return idea;
   }
 
@@ -112,29 +130,9 @@ export class IdeasService {
   // ── Helpers ─────────────────────────────────────────────
 
   private assertOwnership(idea: Idea, userId: string): void {
-    const ideaUserId = typeof idea.user === 'string' ? idea.user : idea.user.id;
+    const ideaUserId = idea.user.id;
     if (ideaUserId !== userId) {
       throw new ForbiddenException('Not your idea');
-    }
-  }
-
-  private async updateQuota(userId: string): Promise<void> {
-    const today = new Date().toISOString().slice(0, 10);
-    const existing = await this.em.findOne(DailyIdeaQuota, {
-      user: userId,
-      date: today,
-    });
-
-    if (existing) {
-      existing.count += 1;
-    } else {
-      const user = await this.em.findOneOrFail(User, { id: userId });
-      const quota = this.em.create(DailyIdeaQuota, {
-        user,
-        date: today,
-        count: 1,
-      });
-      this.em.persist(quota);
     }
   }
 }

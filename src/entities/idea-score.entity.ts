@@ -16,7 +16,7 @@ export class IdeaScore {
   @PrimaryKey({ type: 'uuid' })
   id: string = v4();
 
-  @ManyToOne(() => Idea)
+  @ManyToOne(() => Idea, { deleteRule: 'cascade' })
   idea!: Idea;
 
   @Property({ type: 'float' })

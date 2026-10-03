@@ -9,20 +9,27 @@ import {
   Param,
   Query,
   UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
   ApiBearerAuth,
   ApiOperation,
   ApiParam,
-  ApiQuery,
   ApiResponse,
 } from '@nestjs/swagger';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { AdminService } from './admin.service';
 import { UserRole } from '../entities/enums';
+import {
+  CreateUserDto,
+  PaginationQueryDto,
+  UpdateUserDto,
+  UpsertSettingDto,
+} from './dto/admin.dto';
 
 @ApiTags('Admin')
 @ApiBearerAuth()
@@ -43,22 +50,16 @@ export class AdminController {
 
   @Get('users')
   @ApiOperation({ summary: 'List all users' })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiResponse({ status: 200, description: 'Paginated user list.' })
-  async listUsers(
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
-  ) {
-    return this.adminService.listUsers(page ?? 1, limit ?? 20);
+  async listUsers(@Query() query: PaginationQueryDto) {
+    return this.adminService.listUsers(query.page, query.limit);
   }
 
   @Post('users')
   @ApiOperation({ summary: 'Create a user' })
   @ApiResponse({ status: 201, description: 'User created.' })
-  async createUser(
-    @Body() body: { email: string; passwordHash?: string; role?: string },
-  ) {
+  @ApiResponse({ status: 409, description: 'Email already in use.' })
+  async createUser(@Body() body: CreateUserDto) {
     return this.adminService.createUser(body);
   }
 
@@ -67,7 +68,7 @@ export class AdminController {
   @ApiParam({ name: 'id', description: 'User UUID' })
   @ApiResponse({ status: 200, description: 'The user.' })
   @ApiResponse({ status: 404, description: 'User not found.' })
-  async getUser(@Param('id') id: string) {
+  async getUser(@Param('id', ParseUUIDPipe) id: string) {
     return this.adminService.getUser(id);
   }
 
@@ -75,40 +76,40 @@ export class AdminController {
   @ApiOperation({ summary: 'Update user' })
   @ApiParam({ name: 'id', description: 'User UUID' })
   @ApiResponse({ status: 200, description: 'User updated.' })
+  @ApiResponse({ status: 409, description: 'Email already in use.' })
   async updateUser(
-    @Param('id') id: string,
-    @Body() body: { email?: string; role?: string },
+    @CurrentUser() actorId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: UpdateUserDto,
   ) {
-    return this.adminService.updateUser(id, body);
+    return this.adminService.updateUser(actorId, id, body);
   }
 
   @Delete('users/:id')
   @ApiOperation({ summary: 'Delete user' })
   @ApiParam({ name: 'id', description: 'User UUID' })
   @ApiResponse({ status: 200, description: 'User deleted.' })
-  async deleteUser(@Param('id') id: string) {
-    return this.adminService.deleteUser(id);
+  async deleteUser(
+    @CurrentUser() actorId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.adminService.deleteUser(actorId, id);
   }
 
   // ── Ideas ───────────────────────────────────────────────
 
   @Get('ideas')
   @ApiOperation({ summary: 'List all ideas' })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiResponse({ status: 200, description: 'Paginated idea list.' })
-  async listIdeas(
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
-  ) {
-    return this.adminService.listIdeas(page ?? 1, limit ?? 20);
+  async listIdeas(@Query() query: PaginationQueryDto) {
+    return this.adminService.listIdeas(query.page, query.limit);
   }
 
   @Delete('ideas/:id')
   @ApiOperation({ summary: 'Delete an idea' })
   @ApiParam({ name: 'id', description: 'Idea UUID' })
   @ApiResponse({ status: 200, description: 'Idea deleted.' })
-  async deleteIdea(@Param('id') id: string) {
+  async deleteIdea(@Param('id', ParseUUIDPipe) id: string) {
     return this.adminService.deleteIdea(id);
   }
 
@@ -116,7 +117,7 @@ export class AdminController {
   @ApiOperation({ summary: 'Re-score a single idea' })
   @ApiParam({ name: 'id', description: 'Idea UUID' })
   @ApiResponse({ status: 200, description: 'Idea rescored.' })
-  async rescoreIdea(@Param('id') id: string) {
+  async rescoreIdea(@Param('id', ParseUUIDPipe) id: string) {
     return this.adminService.rescoreIdea(id);
   }
 
@@ -142,7 +143,7 @@ export class AdminController {
   @Put('settings')
   @ApiOperation({ summary: 'Create or update a system setting' })
   @ApiResponse({ status: 200, description: 'Setting upserted.' })
-  async upsertSetting(@Body() body: { key: string; value: string }) {
+  async upsertSetting(@Body() body: UpsertSettingDto) {
     return this.adminService.upsertSetting(body.key, body.value);
   }
 }

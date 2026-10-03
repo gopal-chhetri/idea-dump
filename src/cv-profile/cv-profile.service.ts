@@ -11,6 +11,11 @@ import { User } from '../entities/user.entity';
 import { SkillCategory } from '../entities/enums';
 import { matchSkills, extractSummary } from './skill-dictionary';
 
+interface PdfTextParser {
+  load(): Promise<void>;
+  getText(): Promise<{ text?: string }>;
+}
+
 @Injectable()
 export class CvProfileService {
   constructor(private readonly em: EntityManager) {}
@@ -100,18 +105,20 @@ export class CvProfileService {
     fileName: string,
   ): Promise<{ summaryText: string; skillsAdded: number }> {
     let text: string;
+    const lowerName = fileName.toLowerCase();
+    const isPdf = mimeType === 'application/pdf' && lowerName.endsWith('.pdf');
+    const isText = mimeType === 'text/plain' && lowerName.endsWith('.txt');
 
-    if (mimeType === 'application/pdf' || fileName.endsWith('.pdf')) {
+    if (isPdf) {
       const { PDFParse } = await import('pdf-parse');
-      const parser = new PDFParse(new Uint8Array(buffer));
-      await (parser as any).load();
-      const result = await (parser as any).getText();
-      text = result.text ?? String(result);
-    } else if (
-      mimeType === 'text/plain' ||
-      fileName.endsWith('.txt') ||
-      mimeType.startsWith('text/')
-    ) {
+      // load() is private in the typings but needed before getText().
+      const parser = new PDFParse(
+        new Uint8Array(buffer),
+      ) as unknown as PdfTextParser;
+      await parser.load();
+      const result = await parser.getText();
+      text = result.text ?? '';
+    } else if (isText) {
       text = buffer.toString('utf-8');
     } else {
       throw new BadRequestException(

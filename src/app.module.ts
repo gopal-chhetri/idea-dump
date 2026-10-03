@@ -1,34 +1,27 @@
-import { Module } from '@nestjs/common';
+import { Module, NotFoundException } from '@nestjs/common';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
-import { Migrator } from '@mikro-orm/migrations';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { CvProfileModule } from './cv-profile/cv-profile.module';
 import { IdeasModule } from './ideas/ideas.module';
 import { AdminModule } from './admin/admin.module';
 import { RateLimitModule } from './rate-limit/rate-limit.module';
-import * as entities from './entities';
+import { entityClasses, ormConnectionOptions } from './config/orm.config';
 
 @Module({
   imports: [
     MikroOrmModule.forRoot({
       driver: PostgreSqlDriver,
-      allowGlobalContext: true,
-      entities: Object.values(entities).filter(
-        (x) => typeof x === 'function',
-      ) as any,
-      dbName: process.env.DB_NAME || 'idea_dump',
-      host: process.env.DB_HOST || 'localhost',
-      port: Number(process.env.DB_PORT) || 5432,
-      user: process.env.DB_USER || 'postgres',
-      password: process.env.DB_PASS || 'password',
-      extensions: [Migrator],
-      migrations: {
-        path: './dist/src/migrations',
-        pathTs: './src/migrations',
-      },
+      entities: entityClasses,
+      ...ormConnectionOptions,
+      // findOneOrFail misses become 404s instead of unhandled 500s.
+      findOneOrFailHandler: (entityName: string) =>
+        new NotFoundException(`${entityName} not found`),
     }),
+    // Only applied where ClientIpThrottlerGuard is used (the auth routes).
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 10 }]),
     AdminModule,
     RateLimitModule,
     AuthModule,

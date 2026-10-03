@@ -1,5 +1,5 @@
 import { Idea } from '../../entities/idea.entity';
-import { CvProfile } from '../../entities/cv-profile.entity';
+import { CvSkill } from '../../entities/cv-skill.entity';
 
 export interface ScoringResult {
   fitScore: number; // 0-100
@@ -10,7 +10,7 @@ export interface ScoringResult {
 export interface ScoringStrategy {
   score(
     idea: Idea,
-    profile: CvProfile,
+    skills: CvSkill[],
     userIdeas: Idea[],
   ): Promise<ScoringResult>;
 }

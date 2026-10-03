@@ -111,7 +111,8 @@
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.users"
+          "referencedTableName": "public.users",
+          "deleteRule": "cascade"
         }
       },
       "comment": null
@@ -242,7 +243,8 @@
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.cv_profiles"
+          "referencedTableName": "public.cv_profiles",
+          "deleteRule": "cascade"
         }
       },
       "comment": null
@@ -355,7 +357,8 @@
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.users"
+          "referencedTableName": "public.users",
+          "deleteRule": "cascade"
         }
       },
       "comment": null
@@ -484,7 +487,8 @@
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.ideas"
+          "referencedTableName": "public.ideas",
+          "deleteRule": "cascade"
         }
       },
       "comment": null
@@ -664,7 +668,8 @@
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.ideas"
+          "referencedTableName": "public.ideas",
+          "deleteRule": "cascade"
         }
       },
       "comment": null
@@ -979,7 +984,8 @@
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.users"
+          "referencedTableName": "public.users",
+          "deleteRule": "cascade"
         }
       },
       "comment": null
@@ -1119,7 +1125,8 @@
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.users"
+          "referencedTableName": "public.users",
+          "deleteRule": "cascade"
         }
       },
       "comment": null
@@ -1255,7 +1262,8 @@
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.users"
+          "referencedTableName": "public.users",
+          "deleteRule": "cascade"
         }
       },
       "comment": null

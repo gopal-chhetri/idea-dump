@@ -3,6 +3,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
+import { ClientIpThrottlerGuard } from '../common/guards/client-ip-throttler.guard';
 import { User } from '../entities/user.entity';
 
 /**
@@ -13,6 +14,7 @@ import { User } from '../entities/user.entity';
  * working.
  */
 @ApiTags('Auth')
+@UseGuards(ClientIpThrottlerGuard)
 @Controller('api/auth')
 export class AuthCompatController {
   constructor(private readonly authService: AuthService) {}

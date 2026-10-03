@@ -13,7 +13,11 @@ export class UsersService {
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return this.em.findOne(User, { email }, { populate: ['role'] });
+    return this.em.findOne(
+      User,
+      { email: email.trim().toLowerCase() },
+      { populate: ['role'] },
+    );
   }
 
   async findAll(): Promise<User[]> {
@@ -37,7 +41,7 @@ export class UsersService {
   }): Promise<User> {
     const role = await this.resolveRole(data.role ?? UserRole.USER);
     const user = this.em.create(User, {
-      email: data.email,
+      email: data.email.trim().toLowerCase(),
       passwordHash: data.passwordHash,
       role,
     });

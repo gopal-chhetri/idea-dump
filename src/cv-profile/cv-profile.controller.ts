@@ -7,12 +7,12 @@ import {
   Body,
   Param,
   UseGuards,
-  Req,
   UseInterceptors,
   UploadedFile,
+  BadRequestException,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import type { Request } from 'express';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -22,9 +22,13 @@ import {
   ApiConsumes,
   ApiBody,
 } from '@nestjs/swagger';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CvProfileService } from './cv-profile.service';
 import { UpdateCvProfileDto, CreateCvSkillDto } from './dto/cv-profile.dto';
+
+/** Upper bound for uploaded CVs; PDFs are parsed in memory. */
+const MAX_CV_BYTES = 2 * 1024 * 1024;
 
 @ApiTags('CV Profile')
 @ApiBearerAuth()
@@ -43,8 +47,7 @@ export class CvProfileController {
     description: 'The CV profile (may be null if not yet created).',
   })
   @ApiResponse({ status: 401, description: 'Missing or invalid bearer token.' })
-  async getProfile(@Req() req: Request) {
-    const userId = (req.user as { id: string }).id;
+  async getProfile(@CurrentUser() userId: string) {
     return this.cvProfileService.getProfile(userId);
   }
 
@@ -56,8 +59,10 @@ export class CvProfileController {
   })
   @ApiResponse({ status: 200, description: 'Updated CV profile.' })
   @ApiResponse({ status: 401, description: 'Missing or invalid bearer token.' })
-  async upsertProfile(@Req() req: Request, @Body() dto: UpdateCvProfileDto) {
-    const userId = (req.user as { id: string }).id;
+  async upsertProfile(
+    @CurrentUser() userId: string,
+    @Body() dto: UpdateCvProfileDto,
+  ) {
     return this.cvProfileService.upsertProfile(userId, dto.summaryText);
   }
 
@@ -69,8 +74,7 @@ export class CvProfileController {
   })
   @ApiResponse({ status: 201, description: 'Skill created.' })
   @ApiResponse({ status: 401, description: 'Missing or invalid bearer token.' })
-  async addSkill(@Req() req: Request, @Body() dto: CreateCvSkillDto) {
-    const userId = (req.user as { id: string }).id;
+  async addSkill(@CurrentUser() userId: string, @Body() dto: CreateCvSkillDto) {
     return this.cvProfileService.addSkill(
       userId,
       dto.name,
@@ -88,13 +92,19 @@ export class CvProfileController {
   @ApiResponse({ status: 200, description: 'Skill removed.' })
   @ApiResponse({ status: 401, description: 'Missing or invalid bearer token.' })
   @ApiResponse({ status: 404, description: 'Skill not found.' })
-  async removeSkill(@Req() req: Request, @Param('id') skillId: string) {
-    const userId = (req.user as { id: string }).id;
+  async removeSkill(
+    @CurrentUser() userId: string,
+    @Param('id', ParseUUIDPipe) skillId: string,
+  ) {
     return this.cvProfileService.removeSkill(userId, skillId);
   }
 
   @Post('upload')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: MAX_CV_BYTES, files: 1 },
+    }),
+  )
   @ApiOperation({
     summary: 'Upload CV file',
     description:
@@ -119,13 +129,16 @@ export class CvProfileController {
   })
   @ApiResponse({
     status: 400,
-    description: 'Unsupported file type or empty file.',
+    description: 'Missing, unsupported or empty file.',
   })
+  @ApiResponse({ status: 413, description: 'File larger than 2 MB.' })
   async uploadCv(
-    @Req() req: Request,
+    @CurrentUser() userId: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    const userId = (req.user as { id: string }).id;
+    if (!file) {
+      throw new BadRequestException('A PDF or TXT file is required.');
+    }
     return this.cvProfileService.uploadAndExtract(
       userId,
       file.buffer,

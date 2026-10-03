@@ -1,6 +1,6 @@
 import { Module, Global } from '@nestjs/common';
 import Redis from 'ioredis';
-import { RateLimitGuard } from './rate-limit.guard';
+import { DailyQuotaService } from './daily-quota.service';
 
 @Global()
 @Module({
@@ -16,8 +16,8 @@ import { RateLimitGuard } from './rate-limit.guard';
         });
       },
     },
-    RateLimitGuard,
+    DailyQuotaService,
   ],
-  exports: ['REDIS_CLIENT', RateLimitGuard],
+  exports: ['REDIS_CLIENT', DailyQuotaService],
 })
 export class RateLimitModule {}

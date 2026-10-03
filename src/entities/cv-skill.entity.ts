@@ -16,7 +16,7 @@ export class CvSkill {
   @PrimaryKey({ type: 'uuid' })
   id: string = v4();
 
-  @ManyToOne(() => CvProfile)
+  @ManyToOne(() => CvProfile, { deleteRule: 'cascade' })
   cvProfile!: CvProfile;
 
   @Property({ type: 'string' })

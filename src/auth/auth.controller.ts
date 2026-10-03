@@ -6,17 +6,28 @@ import {
   Get,
   Req,
   Res,
+  HttpCode,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBody,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
+import { CurrentUser } from './decorators/current-user.decorator';
 import { AuthGuard } from '@nestjs/passport';
 import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
+import { ClientIpThrottlerGuard } from '../common/guards/client-ip-throttler.guard';
 import { RegisterDto } from './dto/register.dto';
 import { RefreshDto } from './dto/refresh.dto';
 import { LocalAuthGuard } from './guards/local-auth.guard';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { User } from '../entities/user.entity';
 
 @ApiTags('Auth')
+@UseGuards(ClientIpThrottlerGuard)
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -69,6 +80,21 @@ export class AuthController {
   })
   async refresh(@Body() dto: RefreshDto) {
     return this.authService.refresh(dto.refreshToken);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Post('logout')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Log out',
+    description: 'Revokes the given refresh token for the current user.',
+  })
+  @ApiResponse({ status: 200, description: 'Refresh token revoked.' })
+  @ApiResponse({ status: 401, description: 'Missing or invalid bearer token.' })
+  async logout(@CurrentUser() userId: string, @Body() dto: RefreshDto) {
+    await this.authService.logout(userId, dto.refreshToken);
+    return { loggedOut: true };
   }
 
   // ── Google OAuth ──────────────────────────────────────

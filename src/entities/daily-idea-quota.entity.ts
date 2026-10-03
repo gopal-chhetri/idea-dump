@@ -20,7 +20,7 @@ export class DailyIdeaQuota {
   @PrimaryKey({ type: 'uuid' })
   id: string = v4();
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { deleteRule: 'cascade' })
   user!: User;
 
   /** UTC date string YYYY-MM-DD */

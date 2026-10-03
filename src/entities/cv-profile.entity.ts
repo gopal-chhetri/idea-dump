@@ -16,7 +16,10 @@ export class CvProfile {
   @PrimaryKey({ type: 'uuid' })
   id: string = v4();
 
-  @OneToOne(() => User, (user) => user.cvProfile, { owner: true })
+  @OneToOne(() => User, (user) => user.cvProfile, {
+    owner: true,
+    deleteRule: 'cascade',
+  })
   user!: User;
 
   @Property({ type: 'text', default: '' })

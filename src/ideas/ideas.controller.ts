@@ -1,3 +1,9 @@
+/**
+ * @file ideas.controller.ts
+ * @description NestJS Controller exposing API endpoints for managing, scoring, and ranking project ideas.
+ * Authenticated endpoints with JWT guards and rate limiting.
+ */
+
 import {
   Controller,
   Get,
@@ -7,7 +13,7 @@ import {
   Body,
   Param,
   UseGuards,
-  Req,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import type { Request } from 'express';
 import {
@@ -17,8 +23,8 @@ import {
   ApiParam,
   ApiResponse,
 } from '@nestjs/swagger';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RateLimitGuard } from '../rate-limit/rate-limit.guard';
 import { IdeasService } from './ideas.service';
 import { ScoringService } from '../scoring/scoring.service';
 import { RankingService } from '../ranking/ranking.service';
@@ -36,7 +42,15 @@ export class IdeasController {
     private readonly rankingService: RankingService,
   ) {}
 
-  @UseGuards(RateLimitGuard)
+  /**
+   * Create a new project idea.
+   * On successful creation, triggers an automatic scoring background job against the user's CV skills profile.
+   * Rate limited to prevent quota exhaustion.
+   *
+   * @param req Express Request object containing authenticated user info
+   * @param dto Data transfer object for idea creation details
+   * @returns Detailed idea entity with initial scores
+   */
   @Post()
   @ApiOperation({
     summary: 'Create a new idea',
@@ -46,8 +60,7 @@ export class IdeasController {
   @ApiResponse({ status: 201, description: 'Idea created and scored.' })
   @ApiResponse({ status: 401, description: 'Missing or invalid bearer token.' })
   @ApiResponse({ status: 429, description: 'Daily idea quota reached.' })
-  async create(@Req() req: Request, @Body() dto: CreateIdeaDto) {
-    const userId = (req.user as { id: string }).id;
+  async create(@CurrentUser() userId: string, @Body() dto: CreateIdeaDto) {
     const idea = await this.ideasService.create(userId, dto);
 
     // Auto-score on creation
@@ -56,6 +69,13 @@ export class IdeasController {
     return this.ideasService.findOne(userId, idea.id);
   }
 
+  /**
+   * Retrieve all ideas for the logged-in user.
+   * Results are returned ordered by system rankings (pinned first, then manually ranked, then score-sorted).
+   *
+   * @param req Express Request object containing authenticated user info
+   * @returns Array of ranked idea entities
+   */
   @Get()
   @ApiOperation({
     summary: 'List ranked ideas',
@@ -64,11 +84,17 @@ export class IdeasController {
   })
   @ApiResponse({ status: 200, description: 'Ranked list of ideas.' })
   @ApiResponse({ status: 401, description: 'Missing or invalid bearer token.' })
-  async findAll(@Req() req: Request) {
-    const userId = (req.user as { id: string }).id;
+  async findAll(@CurrentUser() userId: string) {
     return this.rankingService.getRankedIdeas(userId);
   }
 
+  /**
+   * Retrieve details of a single idea by UUID.
+   *
+   * @param req Express Request object containing authenticated user info
+   * @param ideaId Target Idea UUID
+   * @returns Target idea entity with score breakdowns
+   */
   @Get(':id')
   @ApiOperation({
     summary: 'Get a single idea',
@@ -78,11 +104,21 @@ export class IdeasController {
   @ApiResponse({ status: 200, description: 'The requested idea.' })
   @ApiResponse({ status: 401, description: 'Missing or invalid bearer token.' })
   @ApiResponse({ status: 404, description: 'Idea not found.' })
-  async findOne(@Req() req: Request, @Param('id') ideaId: string) {
-    const userId = (req.user as { id: string }).id;
+  async findOne(
+    @CurrentUser() userId: string,
+    @Param('id', ParseUUIDPipe) ideaId: string,
+  ) {
     return this.ideasService.findOne(userId, ideaId);
   }
 
+  /**
+   * Update mutable fields of a project idea.
+   *
+   * @param req Express Request object
+   * @param ideaId Target Idea UUID
+   * @param dto Update parameters
+   * @returns Updated idea entity
+   */
   @Patch(':id')
   @ApiOperation({
     summary: 'Update an idea',
@@ -94,14 +130,20 @@ export class IdeasController {
   @ApiResponse({ status: 401, description: 'Missing or invalid bearer token.' })
   @ApiResponse({ status: 404, description: 'Idea not found.' })
   async update(
-    @Req() req: Request,
-    @Param('id') ideaId: string,
+    @CurrentUser() userId: string,
+    @Param('id', ParseUUIDPipe) ideaId: string,
     @Body() dto: UpdateIdeaDto,
   ) {
-    const userId = (req.user as { id: string }).id;
     return this.ideasService.update(userId, ideaId, dto);
   }
 
+  /**
+   * Permanently delete a project idea and its associated score records / rankings.
+   *
+   * @param req Express Request object
+   * @param ideaId Target Idea UUID
+   * @returns Status object indicating deletion confirmation
+   */
   @Delete(':id')
   @ApiOperation({
     summary: 'Delete an idea',
@@ -111,12 +153,21 @@ export class IdeasController {
   @ApiResponse({ status: 200, description: 'Idea deleted.' })
   @ApiResponse({ status: 401, description: 'Missing or invalid bearer token.' })
   @ApiResponse({ status: 404, description: 'Idea not found.' })
-  async remove(@Req() req: Request, @Param('id') ideaId: string) {
-    const userId = (req.user as { id: string }).id;
+  async remove(
+    @CurrentUser() userId: string,
+    @Param('id', ParseUUIDPipe) ideaId: string,
+  ) {
     await this.ideasService.remove(userId, ideaId);
     return { deleted: true };
   }
 
+  /**
+   * Re-evaluates and scores the idea. Useful if user CV profiles or skills change.
+   *
+   * @param req Express Request object
+   * @param ideaId Target Idea UUID
+   * @returns Idea entity with updated scores
+   */
   @Post(':id/rescore')
   @ApiOperation({
     summary: 'Re-score an idea',
@@ -127,14 +178,26 @@ export class IdeasController {
   @ApiResponse({ status: 200, description: 'Idea with recomputed scores.' })
   @ApiResponse({ status: 401, description: 'Missing or invalid bearer token.' })
   @ApiResponse({ status: 404, description: 'Idea not found.' })
-  async rescore(@Req() req: Request, @Param('id') ideaId: string) {
-    const userId = (req.user as { id: string }).id;
+  async rescore(
+    @CurrentUser() userId: string,
+    @Param('id', ParseUUIDPipe) ideaId: string,
+  ) {
+    // Ownership first: scoring writes to the idea's score row.
+    await this.ideasService.findOne(userId, ideaId);
     await this.scoringService.scoreIdea(ideaId, userId);
     return this.ideasService.findOne(userId, ideaId);
   }
 
   // ── Ranking overrides ─────────────────────────────────
 
+  /**
+   * Applies custom manual ranking/pins to a specific idea.
+   *
+   * @param req Express Request object
+   * @param ideaId Target Idea UUID
+   * @param dto Rank override properties (e.g. set pin state or position index)
+   * @returns Updated ranking override entity
+   */
   @Patch(':id/rank')
   @ApiOperation({
     summary: 'Set ranking override',
@@ -146,14 +209,20 @@ export class IdeasController {
   @ApiResponse({ status: 401, description: 'Missing or invalid bearer token.' })
   @ApiResponse({ status: 404, description: 'Idea not found.' })
   async updateRank(
-    @Req() req: Request,
-    @Param('id') ideaId: string,
+    @CurrentUser() userId: string,
+    @Param('id', ParseUUIDPipe) ideaId: string,
     @Body() dto: UpdateRankDto,
   ) {
-    const userId = (req.user as { id: string }).id;
     return this.rankingService.setOverride(userId, ideaId, dto);
   }
 
+  /**
+   * Clears custom manual ranking overrides, returning the idea to natural score-based sorting.
+   *
+   * @param req Express Request object
+   * @param ideaId Target Idea UUID
+   * @returns Status object indicating override cleared
+   */
   @Delete(':id/rank')
   @ApiOperation({
     summary: 'Clear ranking override',
@@ -164,8 +233,10 @@ export class IdeasController {
   @ApiResponse({ status: 200, description: 'Ranking override cleared.' })
   @ApiResponse({ status: 401, description: 'Missing or invalid bearer token.' })
   @ApiResponse({ status: 404, description: 'Idea not found.' })
-  async clearRank(@Req() req: Request, @Param('id') ideaId: string) {
-    const userId = (req.user as { id: string }).id;
+  async clearRank(
+    @CurrentUser() userId: string,
+    @Param('id', ParseUUIDPipe) ideaId: string,
+  ) {
     await this.rankingService.clearOverride(userId, ideaId);
     return { cleared: true };
   }

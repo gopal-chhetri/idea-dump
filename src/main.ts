@@ -9,26 +9,60 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { join } from 'node:path';
+import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  // Enable CORS for the local frontend dev server
+  // Close MikroORM and Redis cleanly when the container is stopped.
+  app.enableShutdownHooks();
+
+  // The SPA is served same-origin, so CORS only matters for separate local
+  // dev servers. Auth uses bearer tokens, not cookies, so no credentials.
   app.enableCors({
-    origin: [
-      'http://localhost:5500',
-      'http://127.0.0.1:5500',
-      'http://localhost:4000',
-      'http://localhost:8080',
-      'null', // file:// origin for direct file open
-    ],
-    credentials: true,
+    origin: (
+      process.env.CORS_ORIGINS ??
+      'http://localhost:5500,http://127.0.0.1:5500,http://localhost:4000,http://localhost:8080'
+    )
+      .split(',')
+      .map((o) => o.trim())
+      .filter(Boolean),
   });
+
+  // Security headers everywhere; a CSP only for the SPA, since Swagger UI
+  // needs its own inline assets. The CSP allows the CDNs the SPA loads
+  // (Phosphor icons from unpkg, Google Fonts) and its inline onclick
+  // handlers.
+  app.use(
+    '/app',
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", 'https://unpkg.com'],
+          scriptSrcAttr: ["'unsafe-inline'"],
+          styleSrc: [
+            "'self'",
+            "'unsafe-inline'",
+            'https://unpkg.com',
+            'https://fonts.googleapis.com',
+          ],
+          fontSrc: ["'self'", 'https://unpkg.com', 'https://fonts.gstatic.com'],
+          imgSrc: ["'self'", 'data:'],
+          connectSrc: ["'self'"],
+        },
+      },
+    }),
+  );
+  app.use(helmet({ contentSecurityPolicy: false }));
 
   // Health-check endpoint for SPA connection detection
   const httpAdapter = app.getHttpAdapter();
   httpAdapter.get('/health', (_req: Request, res: Response) => {
-    res.status(200).json({ status: 'ok' });
+    res.status(200).json({
+      status: 'ok',
+      dailyLimit: Number(process.env.IDEA_DAILY_LIMIT) || 10,
+    });
   });
 
   // Serve static assets - single unified SPA

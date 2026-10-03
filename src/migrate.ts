@@ -1,7 +1,6 @@
 import { MikroORM } from '@mikro-orm/core';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
-import { Migrator } from '@mikro-orm/migrations';
-import * as entities from './entities';
+import { entityClasses, ormConnectionOptions } from './config/orm.config';
 
 async function main() {
   console.log('=== Migration Script Starting ===');
@@ -15,19 +14,8 @@ async function main() {
 
   const orm = await MikroORM.init<PostgreSqlDriver>({
     driver: PostgreSqlDriver,
-    dbName: process.env.DB_NAME || 'idea_dump',
-    host: process.env.DB_HOST || 'localhost',
-    port: Number(process.env.DB_PORT) || 5432,
-    user: process.env.DB_USER || 'postgres',
-    password: process.env.DB_PASS || 'password',
-    entities: Object.values(entities).filter(
-      (x) => typeof x === 'function',
-    ) as any,
-    extensions: [Migrator],
-    migrations: {
-      path: './dist/src/migrations',
-      pathTs: './src/migrations',
-    },
+    ...ormConnectionOptions,
+    entities: entityClasses,
   });
 
   console.log('Database connection established.');

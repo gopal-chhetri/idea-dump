@@ -1,4 +1,9 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 import { EntityManager } from '@mikro-orm/postgresql';
 import * as crypto from 'node:crypto';
 import { User } from '../entities/user.entity';
@@ -6,9 +11,12 @@ import { Idea } from '../entities/idea.entity';
 import { Role } from '../entities/role.entity';
 import { SystemSetting } from '../entities/system-setting.entity';
 import { ScoringService } from '../scoring/scoring.service';
+import { encryptionKey } from '../config/secrets';
+import { UserRole } from '../entities/enums';
+import { CreateUserDto, UpdateUserDto } from './dto/admin.dto';
 
-const ENCRYPTION_KEY =
-  process.env.APP_ENCRYPTION_KEY || 'insecure-dev-key-32-chars-long!!';
+const SALT_ROUNDS = 12;
+
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 16;
 function deriveKey(raw: string): Buffer {
@@ -17,6 +25,9 @@ function deriveKey(raw: string): Buffer {
 
 @Injectable()
 export class AdminService {
+  /** Derived once at startup, so a missing key fails boot, not first use. */
+  private readonly cipherKey = deriveKey(encryptionKey());
+
   constructor(
     private readonly em: EntityManager,
     private readonly scoringService: ScoringService,
@@ -25,7 +36,9 @@ export class AdminService {
   async getStats() {
     const userCount = await this.em.count(User, {});
     const ideaCount = await this.em.count(Idea, {});
-    const adminCount = await this.em.count(User, { role: { value: 'admin' } });
+    const adminCount = await this.em.count(User, {
+      role: { value: UserRole.ADMIN },
+    });
     return { userCount, adminCount, ideaCount };
   }
 
@@ -70,54 +83,93 @@ export class AdminService {
     };
   }
 
-  async createUser(data: {
-    email: string;
-    passwordHash?: string;
-    role?: string;
-  }) {
+  async createUser(data: CreateUserDto) {
     const existing = await this.em.findOne(User, { email: data.email });
     if (existing) throw new ConflictException('Email already in use');
-    const roleValue = data.role ?? 'user';
-    const role = await this.em.findOneOrFail(Role, { value: roleValue });
+    const role = await this.findRole(data.role ?? UserRole.USER);
     const user = this.em.create(User, {
       email: data.email,
-      passwordHash: data.passwordHash,
+      passwordHash: data.password
+        ? await bcrypt.hash(data.password, SALT_ROUNDS)
+        : undefined,
       role,
     });
     this.em.persist(user);
     await this.em.flush();
-    return {
-      id: user.id,
-      email: user.email,
-      role: role.value,
-      createdAt: user.createdAt,
-    };
+    return this.toUserResponse(user);
   }
 
-  async updateUser(userId: string, data: { email?: string; role?: string }) {
+  async updateUser(actorId: string, userId: string, data: UpdateUserDto) {
     const user = await this.em.findOneOrFail(
       User,
       { id: userId },
       { populate: ['role'] },
     );
-    if (data.email !== undefined) user.email = data.email;
-    if (data.role !== undefined) {
-      user.role = await this.em.findOneOrFail(Role, { value: data.role });
+    if (data.email !== undefined && data.email !== user.email) {
+      const taken = await this.em.findOne(User, { email: data.email });
+      if (taken) throw new ConflictException('Email already in use');
+      user.email = data.email;
+    }
+    if (
+      data.role !== undefined &&
+      data.role !== (user.role.value as UserRole)
+    ) {
+      if (data.role !== UserRole.ADMIN) {
+        await this.assertNotLastAdminChange(actorId, user, 'demote');
+      }
+      user.role = await this.findRole(data.role);
     }
     await this.em.flush();
+    return this.toUserResponse(user);
+  }
+
+  async deleteUser(actorId: string, userId: string) {
+    const user = await this.em.findOneOrFail(
+      User,
+      { id: userId },
+      { populate: ['role'] },
+    );
+    await this.assertNotLastAdminChange(actorId, user, 'delete');
+    this.em.remove(user);
+    await this.em.flush();
+    return { deleted: true };
+  }
+
+  /**
+   * Admins can't demote or delete themselves, and nobody can remove the last
+   * admin; either would lock the platform out of its admin panel.
+   */
+  private async assertNotLastAdminChange(
+    actorId: string,
+    target: User,
+    action: 'demote' | 'delete',
+  ): Promise<void> {
+    if (target.id === actorId) {
+      throw new BadRequestException(`You cannot ${action} your own account`);
+    }
+    if ((target.role.value as UserRole) === UserRole.ADMIN) {
+      const admins = await this.em.count(User, {
+        role: { value: UserRole.ADMIN },
+      });
+      if (admins <= 1) {
+        throw new BadRequestException(`Cannot ${action} the last admin`);
+      }
+    }
+  }
+
+  private async findRole(value: string): Promise<Role> {
+    const role = await this.em.findOne(Role, { value });
+    if (!role) throw new BadRequestException(`Unknown role: ${value}`);
+    return role;
+  }
+
+  private toUserResponse(user: User) {
     return {
       id: user.id,
       email: user.email,
       role: user.role.value,
       createdAt: user.createdAt,
     };
-  }
-
-  async deleteUser(userId: string) {
-    const user = await this.em.findOneOrFail(User, { id: userId });
-    this.em.remove(user);
-    await this.em.flush();
-    return { deleted: true };
   }
 
   // ── Ideas ───────────────────────────────────────────────
@@ -167,14 +219,14 @@ export class AdminService {
 
   async rescoreIdea(ideaId: string) {
     const idea = await this.em.findOneOrFail(Idea, { id: ideaId });
-    const userId = typeof idea.user === 'string' ? idea.user : idea.user.id;
+    const userId = idea.user.id;
     return this.scoringService.scoreIdea(ideaId, userId);
   }
 
   async rescoreAll() {
     const ideas = await this.em.find(Idea, {}, { fields: ['id', 'user'] });
     for (const idea of ideas) {
-      const userId = typeof idea.user === 'string' ? idea.user : idea.user.id;
+      const userId = idea.user.id;
       await this.scoringService.scoreIdea(idea.id, userId);
     }
     return { rescored: ideas.length };
@@ -209,7 +261,7 @@ export class AdminService {
   // ── Encryption ──────────────────────────────────────────
 
   private encrypt(plaintext: string): string {
-    const key = deriveKey(ENCRYPTION_KEY);
+    const key = this.cipherKey;
     const iv = crypto.randomBytes(IV_LENGTH);
     const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
     let encrypted = cipher.update(plaintext, 'utf8', 'hex');
@@ -219,7 +271,7 @@ export class AdminService {
   }
 
   private decrypt(ciphertext: string): string {
-    const key = deriveKey(ENCRYPTION_KEY);
+    const key = this.cipherKey;
     const parts = ciphertext.split(':');
     const iv = Buffer.from(parts[0], 'hex');
     const authTag = Buffer.from(parts[1], 'hex');

@@ -1,17 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { ScoringStrategy, ScoringResult } from './scoring-strategy.interface';
 import { Idea } from '../../entities/idea.entity';
-import { CvProfile } from '../../entities/cv-profile.entity';
 import { CvSkill } from '../../entities/cv-skill.entity';
 
 @Injectable()
 export class RuleBasedScoringStrategy implements ScoringStrategy {
   score(
     idea: Idea,
-    profile: CvProfile,
+    skills: CvSkill[],
     userIdeas: Idea[],
   ): Promise<ScoringResult> {
-    const fitScore = this.computeFitScore(idea, profile);
+    const fitScore = this.computeFitScore(idea, skills);
     const effortScore = this.computeEffortScore(idea);
     const noveltyScore = this.computeNoveltyScore(idea, userIdeas);
 
@@ -20,8 +19,7 @@ export class RuleBasedScoringStrategy implements ScoringStrategy {
 
   // ── Fit: overlap between idea text and CV skills ──────
 
-  private computeFitScore(idea: Idea, profile: CvProfile): number {
-    const skills: CvSkill[] = profile.skills?.getItems() ?? [];
+  private computeFitScore(idea: Idea, skills: CvSkill[]): number {
     if (skills.length === 0) return 50; // Neutral if no CV
 
     const ideaTokens = this.tokenize(

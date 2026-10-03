@@ -13,8 +13,25 @@ import { RefreshToken } from '../entities/refresh-token.entity';
 import { OAuthAccount, OAuthProvider } from '../entities';
 
 const SALT_ROUNDS = 12;
-const REFRESH_TOKEN_DAYS =
-  parseInt(process.env.JWT_REFRESH_EXPIRY ?? '7', 10) || 7;
+const REFRESH_TOKEN_MS = parseDuration(process.env.JWT_REFRESH_EXPIRY ?? '7d');
+
+/**
+ * Parses durations like "7d", "12h", "30m" or a bare number of days. Unknown
+ * formats fall back to 7 days rather than silently misreading the unit.
+ */
+export function parseDuration(value: string): number {
+  const match = /^(\d+)\s*([dhms]?)$/.exec(value.trim());
+  const day = 24 * 60 * 60 * 1000;
+  if (!match) return 7 * day;
+  const amount = Number(match[1]);
+  const unit = { d: day, h: 60 * 60 * 1000, m: 60 * 1000, s: 1000, '': day };
+  return amount * unit[match[2] as keyof typeof unit];
+}
+
+/** Emails are compared case-insensitively and without surrounding spaces. */
+export function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
 
 @Injectable()
 export class AuthService {
@@ -26,7 +43,8 @@ export class AuthService {
 
   // ── Local auth ──────────────────────────────────────────
 
-  async register(email: string, password: string) {
+  async register(rawEmail: string, password: string) {
+    const email = normalizeEmail(rawEmail);
     const existing = await this.usersService.findByEmail(email);
     if (existing) {
       throw new ConflictException('Email already registered');
@@ -38,7 +56,7 @@ export class AuthService {
   }
 
   async validateLocalUser(email: string, password: string): Promise<User> {
-    const user = await this.usersService.findByEmail(email);
+    const user = await this.usersService.findByEmail(normalizeEmail(email));
     if (!user?.passwordHash) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -55,12 +73,26 @@ export class AuthService {
     return this.issueTokens(user);
   }
 
+  /** Revokes the given refresh token if it belongs to userId. */
+  async logout(userId: string, rawRefreshToken: string): Promise<void> {
+    const stored = await this.em.findOne(RefreshToken, {
+      tokenHash: this.hashToken(rawRefreshToken),
+      user: userId,
+      revokedAt: null,
+    });
+    if (stored) {
+      stored.revokedAt = new Date();
+      await this.em.flush();
+    }
+  }
+
   // ── OAuth ───────────────────────────────────────────────
 
   /**
    * Builds the post-login redirect URL for the OAuth provider (Google).
-   * Issues a token pair and appends them as query params for the SPA. Falls
-   * back to a friendly error redirect when no user session is present.
+   * Tokens go in the URL fragment, which browsers never send to servers, so
+   * they stay out of proxy access logs and Referer headers. Falls back to a
+   * friendly error redirect when no user session is present.
    */
   async oauthRedirectUrl(user: User | undefined): Promise<string> {
     const frontendOrigin =
@@ -73,14 +105,15 @@ export class AuthService {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
     });
-    return `${frontendOrigin}?${params.toString()}`;
+    return `${frontendOrigin}#${params.toString()}`;
   }
 
   async validateOAuthUser(
     provider: OAuthProvider,
     providerAccountId: string,
-    email: string,
+    rawEmail: string,
   ) {
+    const email = normalizeEmail(rawEmail);
     // Check if OAuth account already linked
     const existingOAuth = await this.em.findOne(OAuthAccount, {
       provider,
@@ -88,11 +121,7 @@ export class AuthService {
     });
 
     if (existingOAuth) {
-      const user = await this.usersService.findById(
-        typeof existingOAuth.user === 'string'
-          ? existingOAuth.user
-          : existingOAuth.user.id,
-      );
+      const user = await this.usersService.findById(existingOAuth.user.id);
       return user;
     }
 
@@ -122,9 +151,7 @@ export class AuthService {
     if (!stored || stored.revokedAt || stored.expiresAt < new Date()) {
       // Potential reuse detected - revoke all tokens for user
       if (stored) {
-        await this.revokeAllUserTokens(
-          typeof stored.user === 'string' ? stored.user : stored.user.id,
-        );
+        await this.revokeAllUserTokens(stored.user.id);
       }
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
@@ -133,8 +160,7 @@ export class AuthService {
     stored.revokedAt = new Date();
 
     // Load user
-    const userId =
-      typeof stored.user === 'string' ? stored.user : stored.user.id;
+    const userId = stored.user.id;
     const user = await this.usersService.findById(userId);
     if (!user) {
       throw new UnauthorizedException('User not found');
@@ -159,8 +185,7 @@ export class AuthService {
     // Generate opaque refresh token
     const rawRefreshToken = crypto.randomBytes(32).toString('hex');
     const tokenHash = this.hashToken(rawRefreshToken);
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_DAYS);
+    const expiresAt = new Date(Date.now() + REFRESH_TOKEN_MS);
 
     const refreshTokenEntity = this.em.create(RefreshToken, {
       user,

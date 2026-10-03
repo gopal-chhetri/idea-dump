@@ -24,7 +24,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     const message =
       exception instanceof HttpException
-        ? exception.message
+        ? HttpExceptionFilter.messageOf(exception)
         : 'Internal server error';
 
     const detail =
@@ -43,5 +43,20 @@ export class HttpExceptionFilter implements ExceptionFilter {
       timestamp: new Date().toISOString(),
       path: request.url,
     });
+  }
+
+  /**
+   * ValidationPipe (and other built-in exceptions) put the useful detail in
+   * the response body's `message`, which may be an array of field errors;
+   * `exception.message` is only the generic "Bad Request Exception".
+   */
+  static messageOf(exception: HttpException): string {
+    const body = exception.getResponse();
+    if (typeof body === 'object' && body !== null && 'message' in body) {
+      const detail: unknown = body.message;
+      if (Array.isArray(detail)) return detail.map(String).join('; ');
+      if (typeof detail === 'string') return detail;
+    }
+    return exception.message;
   }
 }

@@ -26,9 +26,19 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     profile: Profile,
     done: VerifyCallback,
   ): Promise<void> {
-    const email = profile.emails?.[0]?.value;
+    const primary = profile.emails?.[0];
+    const email = primary?.value;
     if (!email) {
       done(new Error('No email from Google profile'), undefined);
+      return;
+    }
+    // Accounts are linked by email, so only trust addresses Google has
+    // verified; otherwise a Google account could claim someone else's login.
+    const verified =
+      primary.verified ??
+      (profile._json as { email_verified?: boolean }).email_verified;
+    if (verified !== true) {
+      done(null, undefined);
       return;
     }
 

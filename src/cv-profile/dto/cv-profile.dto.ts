@@ -1,5 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsEnum, IsInt, Min, Max, IsOptional } from 'class-validator';
+import {
+  IsString,
+  IsEnum,
+  IsInt,
+  Min,
+  Max,
+  IsOptional,
+  MaxLength,
+  IsNotEmpty,
+} from 'class-validator';
 import { SkillCategory } from '../../entities/enums';
 
 export class UpdateCvProfileDto {
@@ -10,6 +19,7 @@ export class UpdateCvProfileDto {
       'Free-text professional summary used to calibrate idea fit scoring',
   })
   @IsString()
+  @MaxLength(10000)
   summaryText!: string;
 }
 
@@ -19,6 +29,8 @@ export class CreateCvSkillDto {
     description: 'Skill or technology name',
   })
   @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
   name!: string;
 
   @ApiProperty({
