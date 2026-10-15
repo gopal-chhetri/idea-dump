@@ -50,3 +50,19 @@ export function encryptionKey(): string {
   requireInProduction('APP_ENCRYPTION_KEY', process.env.APP_ENCRYPTION_KEY);
   return process.env.APP_ENCRYPTION_KEY || DEV_ENCRYPTION_KEY;
 }
+
+/** TypeSafe API key for Jev scoring; undefined disables Jev. */
+export function typesafeApiKey(): string | undefined {
+  return process.env.TYPESAFE_API_KEY?.trim() || undefined;
+}
+
+/** Jev scores below this confidence fall back to the rule-based score. */
+export function jevMinConfidence(): number {
+  const value = Number(process.env.JEV_MIN_CONFIDENCE);
+  return Number.isFinite(value) && value >= 0 && value <= 1 ? value : 0.5;
+}
+
+/** Per-request timeout for Jev calls; idea creation waits on this. */
+export function jevTimeoutMs(): number {
+  return Number(process.env.JEV_TIMEOUT_MS) || 3000;
+}

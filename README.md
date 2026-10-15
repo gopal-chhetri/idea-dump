@@ -80,6 +80,7 @@ graph TD
 ## Features
 
 - **Idea Management**: Create, edit, and delete ideas
+- **Idea Scoring**: every idea gets a rule-based score (keyword fit, effort, novelty). With a `TYPESAFE_API_KEY`, ideas are also scored by [Jev](https://typesafe.ai) (TypeSafe's System One model) on fit, effort and novelty rubrics; the Jev score is used for ranking when its confidence is at least `JEV_MIN_CONFIDENCE`, otherwise the rule-based score is. Jev failures never block idea creation.
 - **Health Check**: `/health` endpoint for monitoring
 
 ## Tech Stack
@@ -148,6 +149,9 @@ Copy `deployments/local-dev/.env.sample` to `deployments/local-dev/.env` and con
 | `SCORE_WEIGHT_EFFORT` | Weight for Idea creation effort | `0.3` |
 | `SCORE_WEIGHT_NOVELTY` | Weight for Idea uniqueness/novelty | `0.2` |
 | `APP_ENCRYPTION_KEY` | Secret encryption key for system configuration | `insecure-dev-key-32-chars-long!!` |
+| `TYPESAFE_API_KEY` | Enables Jev idea scoring. **When set, idea text and CV skills/summary are sent to TypeSafe's API.** | *(optional; empty = rule-based only)* |
+| `JEV_MIN_CONFIDENCE` | Minimum Jev confidence (0–1) for its score to be used for ranking | `0.5` |
+| `JEV_TIMEOUT_MS` | Timeout for a Jev scoring call (idea creation waits on it) | `3000` |
 
 ## API Documentation
 

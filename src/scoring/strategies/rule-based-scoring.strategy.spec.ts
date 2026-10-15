@@ -32,7 +32,7 @@ describe('RuleBasedScoringStrategy', () => {
     expect(r.fitScore).toBe(75); // 3 of 4 weight matched
   });
 
-  it('lowers the effort score as features and description grow', async () => {
+  it('raises the effort score as features and description grow', async () => {
     const small = await strategy.score(idea(), [], []);
     const big = await strategy.score(
       idea({
@@ -42,8 +42,8 @@ describe('RuleBasedScoringStrategy', () => {
       [],
       [],
     );
-    expect(small.effortScore).toBeGreaterThan(big.effortScore);
-    expect(big.effortScore).toBe(0);
+    expect(big.effortScore).toBeGreaterThan(small.effortScore);
+    expect(big.effortScore).toBe(100);
   });
 
   it('treats the first idea as fully novel and duplicates as not novel', async () => {

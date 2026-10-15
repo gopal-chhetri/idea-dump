@@ -166,10 +166,11 @@ class LocalScoringEngine {
     return total ? Math.round((matched / total) * 100) : 50;
   }
 
+  // Higher = more effort (the final score rewards 100 - effort).
   static _effortScore(idea) {
     const fp = Math.min((idea.features?.length || 0) * 10, 60);
     const lp = Math.min(Math.floor((idea.description?.length || 0) / 50), 40);
-    return Math.max(0, 100 - fp - lp);
+    return Math.min(100, fp + lp);
   }
 
   static _noveltyScore(idea, allIdeas) {
@@ -199,6 +200,18 @@ function renderSkeletons(count = 3) {
       <div class="skel skel-bars"></div>
     </div>
   `).join('');
+}
+
+/* Which scorer produced the score shown on a card (scores[0] is the primary one). */
+function scoreSourceBadge(score) {
+  if (score?.scoringMethod === 'llm') {
+    const pct = Math.round((score.confidence ?? 0) * 100);
+    return `<span class="badge badge-status" title="Scored by Jev (TypeSafe)">Jev · ${pct}%</span>`;
+  }
+  if (score?.scoringMethod === 'rule_based') {
+    return `<span class="badge badge-status" title="Keyword heuristic score">Rule-based</span>`;
+  }
+  return '';
 }
 
 function escapeHtml(str) {
@@ -615,6 +628,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <span class="badge badge-status">${escapeHtml(STATUS_LABELS[statusValue(idea.status)] || statusValue(idea.status))}</span>
               ${isPinned ? `<span class="badge badge-pinned"><i class="ph ph-pin"></i> Pinned</span>` : ''}
               ${rank ? `<span class="badge badge-pinned">Force #${rank}</span>` : ''}
+              ${scoreSourceBadge(s)}
             </div>
           </div>
           <div class="score-badge-circle" title="Fit×0.5 + (100−Effort)×0.3 + Novelty×0.2">

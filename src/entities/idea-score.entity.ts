@@ -12,7 +12,7 @@ import { ScoringMethod } from './enums';
 
 @Entity({ tableName: 'idea_scores' })
 export class IdeaScore {
-  [OptionalProps]?: 'id' | 'scoredAt';
+  [OptionalProps]?: 'id' | 'scoredAt' | 'confidence';
   @PrimaryKey({ type: 'uuid' })
   id: string = v4();
 
@@ -33,6 +33,10 @@ export class IdeaScore {
 
   @Enum({ items: () => ScoringMethod })
   scoringMethod!: ScoringMethod;
+
+  /** 0-1 confidence reported by Jev; null for rule-based scores. */
+  @Property({ type: 'float', nullable: true })
+  confidence?: number;
 
   @Property({ type: 'datetime' })
   scoredAt: Date = new Date();

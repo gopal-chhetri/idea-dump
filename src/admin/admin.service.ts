@@ -12,6 +12,7 @@ import { Role } from '../entities/role.entity';
 import { SystemSetting } from '../entities/system-setting.entity';
 import { ScoringService } from '../scoring/scoring.service';
 import { encryptionKey } from '../config/secrets';
+import { orderScores } from '../scoring/primary-score';
 import { UserRole } from '../entities/enums';
 import { CreateUserDto, UpdateUserDto } from './dto/admin.dto';
 
@@ -192,16 +193,15 @@ export class AdminService {
         title: idea.title,
         status: idea.status.value,
         user: idea.user ? { id: idea.user.id, email: idea.user.email } : null,
-        scores:
-          idea.scores && idea.scores.length
-            ? idea.scores.map((s) => ({
-                finalScore: s.finalScore,
-                fitScore: s.fitScore,
-                effortScore: s.effortScore,
-                noveltyScore: s.noveltyScore,
-                scoringMethod: s.scoringMethod,
-              }))
-            : [],
+        // Primary score first (Jev when confident, otherwise rule-based).
+        scores: orderScores(idea.scores?.getItems() ?? []).map((s) => ({
+          finalScore: s.finalScore,
+          fitScore: s.fitScore,
+          effortScore: s.effortScore,
+          noveltyScore: s.noveltyScore,
+          scoringMethod: s.scoringMethod,
+          confidence: s.confidence ?? null,
+        })),
         createdAt: idea.createdAt,
       })),
       total,

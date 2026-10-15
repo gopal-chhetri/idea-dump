@@ -6,7 +6,7 @@ import {
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Idea } from '../entities/idea.entity';
 import { IdeaRankOverride } from '../entities/idea-rank-override.entity';
-import { ScoringMethod } from '../entities/enums';
+import { primaryScore } from '../scoring/primary-score';
 
 @Injectable()
 export class RankingService {
@@ -94,12 +94,8 @@ export class RankingService {
   // ── Helpers ─────────────────────────────────────────────
 
   private getLatestFinalScore(idea: Idea): number {
-    const scores = idea.scores?.getItems() ?? [];
-    // Prefer rule_based score
-    const ruleScore = scores.find(
-      (s) => s.scoringMethod === ScoringMethod.RULE_BASED,
-    );
-    return ruleScore?.finalScore ?? 0;
+    // Jev when it was confident enough, otherwise rule-based.
+    return primaryScore(idea.scores?.getItems() ?? [])?.finalScore ?? 0;
   }
 
   private assertOwnership(idea: Idea, userId: string): void {

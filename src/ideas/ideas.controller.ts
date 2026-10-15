@@ -30,6 +30,7 @@ import { ScoringService } from '../scoring/scoring.service';
 import { RankingService } from '../ranking/ranking.service';
 import { CreateIdeaDto, UpdateIdeaDto } from './dto/idea.dto';
 import { UpdateRankDto } from '../ranking/dto/update-rank.dto';
+import { serializeIdea } from './idea.serializer';
 
 @ApiTags('Ideas')
 @ApiBearerAuth()
@@ -66,7 +67,7 @@ export class IdeasController {
     // Auto-score on creation
     await this.scoringService.scoreIdea(idea.id, userId);
 
-    return this.ideasService.findOne(userId, idea.id);
+    return serializeIdea(await this.ideasService.findOne(userId, idea.id));
   }
 
   /**
@@ -85,7 +86,8 @@ export class IdeasController {
   @ApiResponse({ status: 200, description: 'Ranked list of ideas.' })
   @ApiResponse({ status: 401, description: 'Missing or invalid bearer token.' })
   async findAll(@CurrentUser() userId: string) {
-    return this.rankingService.getRankedIdeas(userId);
+    const ideas = await this.rankingService.getRankedIdeas(userId);
+    return ideas.map(serializeIdea);
   }
 
   /**
@@ -108,7 +110,7 @@ export class IdeasController {
     @CurrentUser() userId: string,
     @Param('id', ParseUUIDPipe) ideaId: string,
   ) {
-    return this.ideasService.findOne(userId, ideaId);
+    return serializeIdea(await this.ideasService.findOne(userId, ideaId));
   }
 
   /**
@@ -134,7 +136,7 @@ export class IdeasController {
     @Param('id', ParseUUIDPipe) ideaId: string,
     @Body() dto: UpdateIdeaDto,
   ) {
-    return this.ideasService.update(userId, ideaId, dto);
+    return serializeIdea(await this.ideasService.update(userId, ideaId, dto));
   }
 
   /**
@@ -185,7 +187,7 @@ export class IdeasController {
     // Ownership first: scoring writes to the idea's score row.
     await this.ideasService.findOne(userId, ideaId);
     await this.scoringService.scoreIdea(ideaId, userId);
-    return this.ideasService.findOne(userId, ideaId);
+    return serializeIdea(await this.ideasService.findOne(userId, ideaId));
   }
 
   // ── Ranking overrides ─────────────────────────────────

@@ -2,11 +2,6 @@ import { Migration } from '@mikro-orm/migrations';
 
 export class Migration20260713000000 extends Migration {
   override up(): void | Promise<void> {
-    // ── Clean slate: wipe previous data FIRST ─────────
-    this.addSql(
-      `truncate table "users", "refresh_tokens", "oauth_accounts", "ideas", "idea_scores", "idea_rank_overrides", "daily_idea_quotas", "cv_profiles", "cv_skills" restart identity cascade;`,
-    );
-
     // ── Drop old columns before creating new tables ───
     this.addSql(
       `alter table "users" drop constraint if exists "users_role_check";`,

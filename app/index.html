@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Idea Dump: A personal command center for capturing, scoring, and ranking your project ideas." />
+  <meta name="description" content="Idea Dump: score your side-project ideas against your own skills and get a ranked backlog." />
   <title>Idea Dump</title>
   <link rel="icon" type="image/png" sizes="any" href="/app/logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Recursive:slnt,wght,CASL,MONO@-15..0,300..800,0..1,0..1&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="navbar.css" />
   <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
@@ -35,173 +35,147 @@
        ══════════════════════════════════════════════════════════════ -->
   <div id="landing-view" class="view">
 
-    <nav class="glass-nav" id="top-nav-landing">
+    <nav class="top-nav" id="top-nav-landing">
       <a href="#" class="nav-brand">
-        <img class="logo-mark" src="/app/logo.png" alt="Idea Dump" />
+        <img class="logo-mark" src="/app/logo.png" alt="" />
         <span>Idea Dump</span>
       </a>
       <div class="nav-links">
-        <a href="#about">About</a>
         <a href="#how-it-works">How it works</a>
-        <a href="#use-cases">Use cases</a>
         <a href="#scoring">Scoring</a>
-        <button id="landing-auth-btn" class="btn btn-primary btn-sm">
-          <i class="ph ph-key"></i> Sign In
-        </button>
-        <button id="theme-toggle-landing" class="theme-toggle" title="Toggle theme">
+        <button id="theme-toggle-landing" class="theme-toggle" title="Toggle theme" aria-label="Toggle theme">
           <i class="ph ph-moon"></i>
           <i class="ph ph-sun"></i>
         </button>
+        <button id="landing-auth-btn" class="btn btn-secondary btn-sm">Sign in</button>
       </div>
     </nav>
 
     <section class="hero container">
-      <div class="eyebrow">
-        <span>v1.0 &middot; Open source &middot; Rule-based scoring</span>
-      </div>
-      <h1>
-        Turn your idea backlog<br />
-        into a <span class="text-gradient">prioritised build plan</span>
-      </h1>
-      <p class="lead">
-        Idea Dump is a personal command centre for developers who have more project ideas than time.
-        Capture ideas, score them against your actual skills and experience, and let the engine surface what you should build next.
-      </p>
-      <div class="cta-row">
-        <button id="landing-cta-btn" class="btn btn-primary">
-          <i class="ph ph-rocket"></i> Get Started
-        </button>
-        <a href="#about" class="btn btn-secondary">
-          <i class="ph ph-info"></i> Learn More
-        </a>
-      </div>
-    </section>
-
-    <section id="about" class="section container">
-      <div class="section-head">
-        <h2>What is Idea Dump?</h2>
-        <p>A full-stack web application that helps software engineers and indie builders decide which project idea to work on next.</p>
-      </div>
-      <div class="grid-2">
-        <div class="feature-card glass">
-          <h3>The Problem</h3>
-          <p>You have dozens of project ideas: a real-time editor, an AI code review bot, a self-hosted analytics pipeline. But which one aligns best with your current skills? Which is worth the effort? Without data, you pick arbitrarily or get stuck in analysis paralysis.</p>
-        </div>
-        <div class="feature-card glass">
-          <h3>The Solution</h3>
-          <p>Idea Dump lets you dump every idea freely, then automatically scores each one against your <strong>CV profile</strong>: your skills, categories, and proficiency weights. The result is a ranked backlog ordered by CV-fit, estimated effort, and novelty. No spreadsheets, no gut-feel.</p>
-        </div>
-      </div>
-    </section>
-
-    <section id="how-it-works" class="section container">
-      <div class="section-head">
-        <h2>How it works</h2>
-        <p>From idea dump to prioritised backlog in three steps.</p>
-      </div>
-      <div class="steps">
-        <div class="step glass">
-          <div class="num">01</div>
-          <h3>Build your CV profile</h3>
-          <p>Add a professional summary and your core skills (languages, frameworks, tools, domain expertise) with proficiency weights (1-5). This calibrates the scoring engine to <em>your</em> unique stack.</p>
-        </div>
-        <div class="step glass">
-          <div class="num">02</div>
-          <h3>Dump your ideas</h3>
-          <p>Submit project ideas with title, description, key features, and target use case. Each idea is automatically scored the moment you submit it - no manual review needed.</p>
-        </div>
-        <div class="step glass">
-          <div class="num">03</div>
-          <h3>Review your ranked backlog</h3>
-          <p>Your backlog is sorted by computed priority. Pin a favourite, assign a manual rank to override the algorithm, or rescore anytime after updating your CV profile.</p>
-        </div>
-      </div>
-    </section>
-
-    <section id="use-cases" class="section container">
-      <div class="section-head">
-        <h2>Who is this for?</h2>
-        <p>Scenarios where a quick reality check on your ideas actually helps.</p>
-      </div>
-      <div class="grid-3">
-        <div class="feature-card glass">
-          <div class="ico"><i class="ph ph-user"></i></div>
-          <h3>Portfolio builders</h3>
-          <p>You're building projects to showcase for job applications. Score each idea against your current skill stack and pick the one that maximises learning impact while staying feasible.</p>
-        </div>
-        <div class="feature-card glass">
-          <div class="ico"><i class="ph ph-users"></i></div>
-          <h3>Indie makers</h3>
-          <p>You have a backlog of SaaS ideas but limited time. Let the engine surface the idea with the best skill-fit so you ship faster instead of second-guessing.</p>
-        </div>
-        <div class="feature-card glass">
-          <div class="ico"><i class="ph ph-graduation-cap"></i></div>
-          <h3>Career switchers</h3>
-          <p>You're moving into a new tech stack and want to build projects that reinforce your new skills. Update your CV profile and the scoring automatically adapts.</p>
-        </div>
-      </div>
-    </section>
-
-    <section id="scoring" class="section container">
-      <div class="section-head">
-        <h2>How scoring works</h2>
-        <p>Transparent, deterministic, and explainable; no black box.</p>
-      </div>
-      <div class="grid-3">
-        <div class="feature-card glass">
-          <h3>Fit score (50%)</h3>
-          <p>Tokenizes the idea's title, description, features, and use case, then matches them against your <strong>CvSkill.name</strong> entries weighted by proficiency. Higher overlap = higher fit.</p>
-        </div>
-        <div class="feature-card glass">
-          <h3>Effort score (30%)</h3>
-          <p>Derived from feature count and description length as a proxy for scope. Lower effort is rewarded (inverted in the final aggregation) so achievable ideas rise to the top.</p>
-        </div>
-        <div class="feature-card glass">
-          <h3>Novelty score (20%)</h3>
-          <p>Measures how different an idea is from your existing idea set using text similarity. Diverse ideas score higher, preventing a backlog full of variations on the same theme.</p>
-        </div>
-      </div>
-      <div style="text-align:center;margin-top:1.5rem">
-        <p style="color:var(--text-secondary);font-size:0.9rem">
-          Final score = 0.5 &times; fit + 0.3 &times; (100 &minus; effort) + 0.2 &times; novelty
-          &nbsp;&middot;&nbsp; Weights are configurable via environment variables.
+      <div class="hero-copy">
+        <h1>Turn your idea backlog into a <span class="accent">ranked build plan.</span></h1>
+        <p class="lead">
+          For developers with more side-project ideas than evenings. Add your skills once, dump
+          your ideas, and Idea Dump scores each one on how well it fits you, how much work it is,
+          and how different it is from everything else on your list.
         </p>
+        <div class="cta-row">
+          <button id="landing-cta-btn" class="btn btn-primary">Create an account</button>
+          <a href="#scoring" class="text-link">How the score works</a>
+        </div>
       </div>
+
+      <figure class="rank-board" aria-label="Example ranked backlog">
+        <figcaption>Your backlog, ranked</figcaption>
+        <ol class="rank-list">
+          <li class="rank-row">
+            <span class="rank-pos">1</span>
+            <div class="rank-idea">
+              <strong>Self-hosted analytics pipeline</strong>
+              <span>Postgres, Kafka, Grafana</span>
+            </div>
+            <dl class="rank-metrics">
+              <div><dt>fit</dt><dd>82</dd></div>
+              <div><dt>effort</dt><dd>55</dd></div>
+              <div><dt>novelty</dt><dd>70</dd></div>
+            </dl>
+            <span class="rank-total">68</span>
+          </li>
+          <li class="rank-row">
+            <span class="rank-pos">2</span>
+            <div class="rank-idea">
+              <strong>AI code review bot</strong>
+              <span>GitHub app, TypeScript</span>
+            </div>
+            <dl class="rank-metrics">
+              <div><dt>fit</dt><dd>71</dd></div>
+              <div><dt>effort</dt><dd>40</dd></div>
+              <div><dt>novelty</dt><dd>35</dd></div>
+            </dl>
+            <span class="rank-total">60</span>
+          </li>
+          <li class="rank-row">
+            <span class="rank-pos">3</span>
+            <div class="rank-idea">
+              <strong>Real-time collaborative editor</strong>
+              <span>CRDTs, WebSockets</span>
+            </div>
+            <dl class="rank-metrics">
+              <div><dt>fit</dt><dd>64</dd></div>
+              <div><dt>effort</dt><dd>80</dd></div>
+              <div><dt>novelty</dt><dd>75</dd></div>
+            </dl>
+            <span class="rank-total">53</span>
+          </li>
+        </ol>
+      </figure>
     </section>
 
-    <section id="tech" class="section container">
-      <div class="section-head">
-        <h2>Built with standard backend tooling</h2>
-        <p>The same kind of stack you would find behind a real web service.</p>
+    <section id="how-it-works" class="section container split">
+      <div class="split-head">
+        <h2>How it works</h2>
+        <p>Ten minutes of setup, then every new idea is scored the moment you add it.</p>
       </div>
-      <div class="grid-3">
-        <div class="feature-card glass">
-          <h3>Backend</h3>
-          <p>TypeScript, NestJS, MikroORM, PostgreSQL, Redis, Passport.js (JWT RS256 + OAuth2)</p>
-        </div>
-        <div class="feature-card glass">
-          <h3>Frontend</h3>
-          <p>Vanilla JS SPA with responsive CSS grid, glassmorphism design system, Lucide icons</p>
-        </div>
-        <div class="feature-card glass">
-          <h3>Infrastructure</h3>
-          <p>Docker multi-stage build, GitHub Container Registry, Traefik reverse proxy, Infisical secrets, Cloudflare DNS + TLS</p>
-        </div>
+      <ol class="step-list">
+        <li>
+          <h3>Describe your skills</h3>
+          <p>A short summary plus the languages, frameworks and tools you know, each weighted 1 to 5. This is what "fit" is measured against.</p>
+        </li>
+        <li>
+          <h3>Dump your ideas</h3>
+          <p>Title, description, key features, who it's for. Rough is fine. Each idea is scored as soon as you save it.</p>
+        </li>
+        <li>
+          <h3>Work from the top</h3>
+          <p>The backlog is sorted by score. Pin a favourite or set a manual rank to override it, and rescore everything after you learn something new.</p>
+        </li>
+      </ol>
+    </section>
+
+    <section id="scoring" class="section container split">
+      <div class="split-head">
+        <h2>How scoring works</h2>
+        <p>Rule-based and deterministic: the same idea and profile always give the same score, and you can see why.</p>
+        <p class="formula">score = 0.5 &times; fit + 0.3 &times; (100 &minus; effort) + 0.2 &times; novelty</p>
       </div>
+      <dl class="weight-list">
+        <div class="weight-row" style="--w: 50%">
+          <dt><span class="weight-pct">50%</span> Fit</dt>
+          <dd>Words from the idea's title, description, features and use case are matched against your skills, weighted by proficiency.</dd>
+        </div>
+        <div class="weight-row" style="--w: 30%">
+          <dt><span class="weight-pct">30%</span> Effort, inverted</dt>
+          <dd>Estimated from feature count and description length. Smaller ideas score higher, so things you can finish rise.</dd>
+        </div>
+        <div class="weight-row" style="--w: 20%">
+          <dt><span class="weight-pct">20%</span> Novelty</dt>
+          <dd>Text similarity against your other ideas. Five variations on the same to-do app won't all land on top.</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section id="tech" class="section container split">
+      <div class="split-head">
+        <h2>Under the hood</h2>
+        <p>Open source under MIT. Weights are configurable through environment variables.</p>
+      </div>
+      <dl class="tech-list">
+        <div><dt>Backend</dt><dd>TypeScript, NestJS, MikroORM, PostgreSQL, Redis, Passport.js (JWT RS256 + OAuth2)</dd></div>
+        <div><dt>Frontend</dt><dd>Vanilla JS single-page app, Phosphor icons</dd></div>
+        <div><dt>Infra</dt><dd>Docker multi-stage build, GitHub Container Registry, Traefik, Infisical, Cloudflare DNS + TLS</dd></div>
+      </dl>
     </section>
 
     <section class="section container">
-      <div class="cta-band glass">
-        <h2>Stop guessing. Start building.</h2>
-        <p>Make an account, add your skills, and let the engine rank your ideas.</p>
-        <button id="landing-footer-cta" class="btn btn-primary">
-          <i class="ph ph-rocket"></i> Launch the App
-        </button>
+      <div class="cta-band">
+        <h2>Find out which idea to build next</h2>
+        <p>Create an account, add your skills, paste in your ideas.</p>
+        <button id="landing-footer-cta" class="btn btn-primary">Create an account</button>
       </div>
     </section>
 
     <footer class="site-footer container">
-      <p>Idea Dump &middot; MIT License &middot; Built with NestJS &middot; Part of the portfolio project sequence</p>
+      <p>Idea Dump &middot; MIT License &middot; Part of <a href="https://soylab.dpdns.org">SoyLab</a></p>
     </footer>
 
   </div>
@@ -214,7 +188,7 @@
     <div id="view-app" class="app">
 
       <!-- Top navigation -->
-      <nav id="top-nav" class="glass-nav">
+      <nav id="top-nav" class="top-nav">
         <a href="#" class="nav-brand">
           <img class="logo-mark" src="/app/logo.png" alt="Idea Dump" />
           <span>Idea Dump</span>

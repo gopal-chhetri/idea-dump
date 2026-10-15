@@ -52,12 +52,13 @@ export class RuleBasedScoringStrategy implements ScoringStrategy {
     const featureCount = idea.features.length;
     const descLength = idea.description.length;
 
-    // More features + longer description → lower effort score (more effort)
-    // Scale: 0 features, short desc → 100 (easy); 10+ features, 2000+ chars → 0 (hard)
-    const featurePenalty = Math.min(featureCount * 10, 60);
-    const lengthPenalty = Math.min(Math.floor(descLength / 50), 40);
+    // Higher = more effort, matching ScoringService (which rewards
+    // 100 - effort) and the UI ("Ease: 100 - effort").
+    // Scale: 0 features, short desc → 0 (easy); 6+ features, 2000+ chars → 100 (hard)
+    const featureEffort = Math.min(featureCount * 10, 60);
+    const lengthEffort = Math.min(Math.floor(descLength / 50), 40);
 
-    return Math.max(0, 100 - featurePenalty - lengthPenalty);
+    return Math.min(100, featureEffort + lengthEffort);
   }
 
   // ── Novelty: Jaccard distance from user's other ideas ──
